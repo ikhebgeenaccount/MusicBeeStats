@@ -10,11 +10,12 @@ from plots import barh_plot
 from tagtracker import TagTracker
 from track import Track
 
-# TODO: put it on github
-def show_stats(folder_path, file_name):
+
+# Has some predefined plots and stuff, shows lifetime stats as well
+def show_stats(file_path):
 	print('MusicBee Stats')
-	print('Reading library file at "' + folder_path + '/' + file_name + '"')
-	mbl = MBLibrary(folder_path + '/' + file_name, tagtrackers=[
+	print('Reading library file at "' + file_path + '"')
+	mbl = MBLibrary(file_path, tagtrackers=[
 		TagTracker('artist', 'play_count', unique=False),  # Counts the play count for each artist separately
 		TagTracker('genre', 'play_count', unique=False),  # Counts the play count for each genre separately
 		TagTracker('artist'),  # Counts the number of tracks for each artist separately
@@ -22,7 +23,7 @@ def show_stats(folder_path, file_name):
 		TagTracker('year'),  # Counts the number of tracks released per year
 		TagTracker('artist', 'total_time', unique=False),  # Sums the total play time of songs per artist
 		TagTracker('artist', func=lambda t: t.get('play_count') * t.get('total_time'), unique=False),  # Calculates the total time played for each artist
-		TagTracker(func=lambda t: t.get('name')[0])
+		TagTracker(func=lambda t: t.get('name')[0])  # Counts the number of songs that start with a particular letter
 		])
 
 	print(('{:20}{}\n' * 3 + '{:20}{:.1f}h\n' * 2 + '{} {}, {} times for a total of {:.1f} hours')
@@ -43,10 +44,8 @@ def show_stats(folder_path, file_name):
 	# barh_plot(sorted_genres_by_play_count, 'Total play count by genre', 'Play count')
 	# barh_plot({artist: total_time / 60000 for artist, total_time in sorted(mbl.tagtrackers[5].data.items(), key=lambda item: item[1], reverse=True)}, 'Total time (min) by artist')
 	# barh_plot(sorted_artists_by_play_count, 'Play count per artist', 'Play count')
-	barh_plot(sorted_artists_by_play_time, 'Play time per artist', 'Play time')
-	# barh_plot(sorted_first_letter_song_name, 'Count of songs starting with letter')
-
-	print(mbl.tagtrackers[-1].data)
+	# barh_plot(sorted_artists_by_play_time, 'Play time per artist', 'Play time (h)')
+	barh_plot(sorted_first_letter_song_name, 'Count of songs starting with letter')
 
 	# Show all created plots
 	plt.show()
@@ -98,8 +97,6 @@ def show_stats_over_time(date_new, new_mbl, date_old, old_mbl):
 	sorted_artist_play_count = sorted(tag_mbl.tagtrackers[0].data.items(), key=lambda item: item[1], reverse=True)
 
 	print('Over the last {} days, these are your most listened to:'.format((date_new - date_old).days))
-	# TODO: TagTracker('artist', func=lambda item: item.get('play_count') * item.get('total_time'), unique=False)
-	#  for total play time for each artist
 
 	# Print top 5 most listened to artists
 	artists_base = '{:>2}. {:28}{:>5}{:>8.1f}h\n'
@@ -160,11 +157,14 @@ def find_closest_mbl(date):
 
 
 if __name__ == '__main__':
-	file_name = 'iTunes Music Library.xml'
-	folder_path = 'D:/Lars/Music/MusicBee'
+	if len(sys.argv) < 2:
+		raise IndexError('Use this program as follows: python main.py PATH_TO_FILE [-saveOnly]')
+
+	file_path = sys.argv[1]
+
 	if len(sys.argv) > 1 and '-saveOnly' in sys.argv:
 		# User only wants to save the stats, not show any graphs and shit
-		new_mbl = read_library_xml(folder_path + '/' + file_name)
+		new_mbl = read_library_xml(file_path)
 		save_library(new_mbl)
 
 		today = datetime.date.today()
@@ -174,10 +174,10 @@ if __name__ == '__main__':
 			# Print yearly stats
 			old_mbl, date_old = find_closest_mbl(datetime.date(today.year - 1, 12, today.day))
 			show_stats_over_time(today, new_mbl, date_old, old_mbl)
-		elif today.day == 27:
+		elif today.day == 1:
 			# Print monthly stats
 			old_mbl, date_old = find_closest_mbl(datetime.date(today.year, today.month - 1, today.day))
 			show_stats_over_time(today, new_mbl, date_old, old_mbl)
 	else:
 		# User wants to see some interesting stuff
-		show_stats(folder_path, file_name)
+		show_stats(file_path)

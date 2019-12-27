@@ -28,7 +28,7 @@ class TagTracker:
 	Counts the number of songs that start with a particular letter:
 	TagTracker(tag=lambda t: t.get('name')[0])
 	"""
-	def __init__(self, tag=None, tag_data=None, unique=True, case_sensitive=False):
+	def __init__(self, tag, tag_data=None, unique=True, case_sensitive=False):
 		if isinstance(tag, str):
 			self.tag = lambda t: t.get(tag)
 		else:

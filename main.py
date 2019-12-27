@@ -54,8 +54,6 @@ def show_stats(file_path):
 					'Total time played:', sum([track.get('play_count') * track.get('total_time') for track in mbl.tracks])/3600000,
 					'Most played:', max(mbl.tracks).get('name'), max(mbl.tracks).get('play_count'), max(mbl.tracks).get('total_time') * max(mbl.tracks).get('play_count')/3600000))
 
-	print(mbl.tagtrackers[12].data)
-
 	sorted_artists_by_play_count = {artist: play_count for artist, play_count in sorted(mbl.tagtrackers[0].data.items(), key=lambda item: item[1], reverse=True)}
 	sorted_genres_by_play_count = {genre: play_count for genre, play_count in sorted(mbl.tagtrackers[1].data.items(), key=lambda item: item[1], reverse=True)}
 	sorted_artists_by_play_count_over_number_of_tracks = {artist: play_count / mbl.tagtrackers[2].data[artist] for artist, play_count in sorted(filter(lambda elem: mbl.tagtrackers[2].data[elem[0]] > 10, mbl.tagtrackers[0].data.items()), key=lambda item: item[1] / mbl.tagtrackers[2].data[item[0]], reverse=True)}
@@ -125,7 +123,7 @@ def show_stats_over_time(date_new, new_mbl, date_old, old_mbl):
 
 	tag_mbl = MBLibrary(tracks=subbed_mbl.tracks, tagtrackers=[
 		TagTracker('artist', 'play_count', unique=False),
-		TagTracker('artist', func=lambda item: item.get('play_count') * item.get('total_time'), unique=False)
+		TagTracker('artist', tag_data=lambda item: item.get('play_count') * item.get('total_time'), unique=False)
 	])
 
 	sorted_artist_play_count = sorted(tag_mbl.tagtrackers[0].data.items(), key=lambda item: item[1], reverse=True)

@@ -1,6 +1,7 @@
 import datetime
 import glob
 import json
+import os
 import sys
 
 import matplotlib.pyplot as plt
@@ -71,7 +72,11 @@ def read_mbl(file_path):
 
 
 # Saves the library stats to a datestamped mbl file in the libs folder
+# TODO: check if 'libs' folder exists and if it doesn't, create it
 def save_library(mblibrary):
+	if not os.path.exists('libs/'):
+		os.makedirs('libs/')
+
 	dt = datetime.datetime.now()
 	today = '{:0>4}{:0>2}{:0>2}'.format(str(dt.year), str(dt.month), str(dt.day))
 	lib_name = 'libs/{:0>4}{:0>2}{:0>2}.mbl'.format(str(dt.year), str(dt.month), str(dt.day))

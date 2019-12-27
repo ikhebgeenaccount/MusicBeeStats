@@ -1,3 +1,4 @@
 libs/*
 .idea
 __pycache__
+boot.bat

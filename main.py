@@ -72,7 +72,6 @@ def read_mbl(file_path):
 
 
 # Saves the library stats to a datestamped mbl file in the libs folder
-# TODO: check if 'libs' folder exists and if it doesn't, create it
 def save_library(mblibrary):
 	if not os.path.exists('libs/'):
 		os.makedirs('libs/')

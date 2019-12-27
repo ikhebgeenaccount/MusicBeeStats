@@ -5,9 +5,10 @@ import os
 import sys
 
 import matplotlib.pyplot as plt
+import numpy
 
 from musicbeelibrary import MBLibrary
-from plots import barh_plot
+from plots import barh_plot, scatter_plot
 from tagtracker import TagTracker
 from track import Track
 
@@ -42,7 +43,9 @@ def show_stats(file_path):
 		# Sums the play count for each interval of 30s of length of songs
 		TagTracker(tag=lambda t: int(t.get('total_time')/1000 - (t.get('total_time')/1000) % 30), tag_data='play_count', unique=False),
 		# Counts the number of songs of artists that start with the same letter as the artists' names
-		TagTracker(tag='artist', tag_data=lambda t:t.get('artist')[0] == t.get('name')[0], unique=False)
+		TagTracker(tag='artist', tag_data=lambda t:t.get('artist')[0] == t.get('name')[0], unique=False),
+		#
+		TagTracker(tag=lambda t:len(t.get('name')), tag_data=lambda t:t.get('total_time'))
 		])
 
 	print(('{:20}{}\n' * 4 + '{:20}{:.1f}h\n' * 2 + '{} {}, {} times for a total of {:.1f} hours')
@@ -54,6 +57,8 @@ def show_stats(file_path):
 					'Total time played:', sum([track.get('play_count') * track.get('total_time') for track in mbl.tracks])/3600000,
 					'Most played:', max(mbl.tracks).get('name'), max(mbl.tracks).get('play_count'), max(mbl.tracks).get('total_time') * max(mbl.tracks).get('play_count')/3600000))
 
+	# print(mbl.tagtrackers[-1].data)
+
 	sorted_artists_by_play_count = {artist: play_count for artist, play_count in sorted(mbl.tagtrackers[0].data.items(), key=lambda item: item[1], reverse=True)}
 	sorted_genres_by_play_count = {genre: play_count for genre, play_count in sorted(mbl.tagtrackers[1].data.items(), key=lambda item: item[1], reverse=True)}
 	sorted_artists_by_play_count_over_number_of_tracks = {artist: play_count / mbl.tagtrackers[2].data[artist] for artist, play_count in sorted(filter(lambda elem: mbl.tagtrackers[2].data[elem[0]] > 10, mbl.tagtrackers[0].data.items()), key=lambda item: item[1] / mbl.tagtrackers[2].data[item[0]], reverse=True)}
@@ -64,6 +69,11 @@ def show_stats(file_path):
 	sorted_tracks_by_length = {'{} - {}'.format(base, base + 30): count for base, count in sorted(mbl.tagtrackers[10].data.items(), key=lambda item: item[0])}
 	sorted_tracks_play_count_by_length = {'{} - {}'.format(base, base + 30): count for base, count in sorted(mbl.tagtrackers[11].data.items(), key=lambda item: item[0])}
 	sorted_artist_song_first_letter = {artist: count for artist, count in sorted(mbl.tagtrackers[12].data.items(), key=lambda item: item[1], reverse=True)}
+	scatter_name_time_length = []
+
+	for key in mbl.tagtrackers[13].data.keys():
+		for val in mbl.tagtrackers[13].data[key]:
+			scatter_name_time_length.append([key, val/1000])
 
 	barh_plot(sorted_artists_by_play_count_over_number_of_tracks, 'Average play count per song per artist', 'Play count')
 	barh_plot(sorted_genres_by_play_count, 'Total play count by genre', 'Play count')
@@ -76,6 +86,7 @@ def show_stats(file_path):
 	barh_plot(sorted_tracks_by_length, 'Amount of tracks per length interval of 30s')
 	barh_plot(sorted_tracks_play_count_by_length, 'Play count per interval of length of song')
 	barh_plot(sorted_artist_song_first_letter, 'Number of songs that start with the same letter as the artist name')
+	scatter_plot(numpy.array(scatter_name_time_length), 'Length of name vs length of song', 'Length of name', 'Length of song (s)')
 	# Show all created plots
 	plt.show()
 

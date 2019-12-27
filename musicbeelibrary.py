@@ -77,6 +77,7 @@ class MBLibrary:
 
 		# Loop over other's tracks and subtract them with a None check before
 		for t in other.tracks:
+			# Only subtract if you find a corresponding track
 			if tracks_self[t.get('track_id')]:
 				tracks_self[t.get('track_id')].data['play_count'] -= t.get('play_count')
 

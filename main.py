@@ -178,7 +178,8 @@ def find_closest_mbl(date):
 
 if __name__ == '__main__':
 	if len(sys.argv) < 2:
-		raise IndexError('Use this program as follows: python main.py PATH_TO_FILE [-saveOnly]')
+		print('Use this program as follows: python main.py PATH_TO_FILE [-saveOnly]')
+		sys.exit()
 
 	file_path = sys.argv[1]
 

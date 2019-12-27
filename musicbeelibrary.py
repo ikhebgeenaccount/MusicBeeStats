@@ -65,7 +65,7 @@ class MBLibrary:
 				self.tracks.append(t)
 
 	# Arithmetic functions only subtract and add play counts of same tracks
-	# Assumptions: self.tracks > other.tracks
+	# Assumptions: self.tracks > other.tracks and equal track_id means same song
 	# So (new library stats) - (old library stats) will work as new library will at least have higher track ids than the
 	# old library stats, vice versa DOES NOT WORK
 	def __sub__(self, other):

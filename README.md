@@ -1,5 +1,4 @@
 # MusicBeeStats
----
 MusicBeeStats tracks your play counts and other stats over time. To update it every day add it to your startup sequence by adding a `.bat` file with the following command:
 ```
 python main.py FILE_PATH_TO_XML_LIBRARY_FILE [-saveOnly]
@@ -10,5 +9,4 @@ The `-saveOnly` argument tells MusicBeeStats whether to just save the stats and 
 MusicBeeStats will save your stats once a day (assuming you boot your pc at least once a day). 
 
 ## Requirements
----
 Requires Python 3.7 to run.

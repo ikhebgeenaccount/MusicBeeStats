@@ -17,15 +17,25 @@ def show_stats(file_path):
 	print('MusicBee Stats')
 	print('Reading library file at "' + file_path + '"')
 	mbl = MBLibrary(file_path, tagtrackers=[
-		TagTracker('artist', 'play_count', unique=False),  # Counts the play count for each artist separately
-		TagTracker('genre', 'play_count', unique=False),  # Counts the play count for each genre separately
-		TagTracker('artist'),  # Counts the number of tracks for each artist separately
-		TagTracker('genre'),  # Counts the number of tracks for each genre separately
-		TagTracker('year'),  # Counts the number of tracks released per year
-		TagTracker('artist', 'total_time', unique=False),  # Sums the total play time of songs per artist
-		TagTracker('artist', func=lambda t: t.get('play_count') * t.get('total_time'), unique=False),  # Calculates the total time played for each artist
-		TagTracker(func=lambda t: t.get('name')[0]),  # Counts the number of songs that start with a particular letter
-		TagTracker('artist', func=lambda t: t.get('play_count') * t.get('size'), unique=False),  # Calculates the total size played for each artist
+		# Counts the play count for each artist separately
+		TagTracker('artist', 'play_count', unique=False),
+		# Counts the play count for each genre separately
+		TagTracker('genre', 'play_count', unique=False),
+		# Counts the number of tracks for each artist separately
+		TagTracker('artist'),
+		# Counts the number of tracks for each genre separately
+		TagTracker('genre'),
+		# Counts the number of tracks released per year
+		TagTracker('year'),
+		# Sums the total play time of songs per artist
+		TagTracker('artist', 'total_time', unique=False),
+		# Calculates the total time played for each artist
+		TagTracker('artist', func=lambda t: t.get('play_count') * t.get('total_time'), unique=False),
+		# Counts the number of songs that start with a particular letter
+		TagTracker(func=lambda t: t.get('name')[0]),
+		# Calculates the total size played for each artist
+		TagTracker('artist', func=lambda t: t.get('play_count') * t.get('size'), unique=False),
+		# Counts the total play count per release year
 		TagTracker('year', 'play_count', unique=False),
 		])
 
@@ -106,7 +116,7 @@ def show_stats_over_time(date_new, new_mbl, date_old, old_mbl):
 
 	sorted_artist_play_count = sorted(tag_mbl.tagtrackers[0].data.items(), key=lambda item: item[1], reverse=True)
 
-	print('Over the last {} days, these are your most listened to:'.format((date_new - date_old).days))
+	print('Over the last {} days you have added {} new songs and you listened to:'.format((date_new - date_old).days, len(new_mbl.tracks) - len(old_mbl.tracks)))
 
 	# Print top 5 most listened to artists
 	artists_base = '{:>2}. {:28}{:>5}{:>8.1f}h\n'

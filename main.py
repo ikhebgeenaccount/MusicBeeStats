@@ -26,6 +26,7 @@ def show_stats(file_path):
 		TagTracker('artist', func=lambda t: t.get('play_count') * t.get('total_time'), unique=False),  # Calculates the total time played for each artist
 		TagTracker(func=lambda t: t.get('name')[0]),  # Counts the number of songs that start with a particular letter
 		TagTracker('artist', func=lambda t: t.get('play_count') * t.get('size'), unique=False),  # Calculates the total size played for each artist
+		TagTracker('year', 'play_count', unique=False),
 		])
 
 	print(('{:20}{}\n' * 4 + '{:20}{:.1f}h\n' * 2 + '{} {}, {} times for a total of {:.1f} hours')
@@ -43,6 +44,7 @@ def show_stats(file_path):
 	sorted_artists_by_play_time = {artist: play_time/3600000 for artist, play_time in sorted(mbl.tagtrackers[6].data.items(), key=lambda item: item[1], reverse=True)}
 	sorted_first_letter_song_name = {letter: count for letter, count in sorted(mbl.tagtrackers[7].data.items(), key=lambda item: item[1], reverse=True)}
 	sorted_artists_by_play_size = {artist: size/(1024**2) for artist, size in sorted(mbl.tagtrackers[8].data.items(), key=lambda item: item[1], reverse=True)}
+	sorted_year_by_play_count = {str(year): play_count for year, play_count in sorted(mbl.tagtrackers[9].data.items(), key=lambda item: item[1], reverse=True)}
 
 	barh_plot(sorted_artists_by_play_count_over_number_of_tracks, 'Average play count per song per artist', 'Play count')
 	barh_plot(sorted_genres_by_play_count, 'Total play count by genre', 'Play count')
@@ -51,6 +53,7 @@ def show_stats(file_path):
 	barh_plot(sorted_artists_by_play_time, 'Play time per artist', 'Play time (h)')
 	barh_plot(sorted_first_letter_song_name, 'Count of songs starting with letter')
 	barh_plot(sorted_artists_by_play_size, 'Play size per artist', 'Play size (mb)')
+	barh_plot(sorted_year_by_play_count, 'Play count by year', 'Play count')
 	# Show all created plots
 	plt.show()
 
@@ -181,7 +184,7 @@ if __name__ == '__main__':
 			# Print yearly stats
 			old_mbl, date_old = find_closest_mbl(datetime.date(today.year - 1, 12, today.day))
 			show_stats_over_time(today, new_mbl, date_old, old_mbl)
-		elif today.day == 1:
+		if today.day == 1:
 			# Print monthly stats
 			old_mbl, date_old = find_closest_mbl(datetime.date(today.year, today.month - 1, today.day))
 			show_stats_over_time(today, new_mbl, date_old, old_mbl)

@@ -1,6 +1,7 @@
 import json
+import re
 
-TAGS = ['Track ID', 'Name', 'Artist', 'Album', 'Genre', 'Year', 'Size', 'Total Time', 'Date Added', 'Play Count', 'Play Date UTC', 'Persistent ID']
+TAGS = ['Track ID', 'Name', 'Artist', 'Album', 'Genre', 'Year', 'Size', 'Total Time', 'Date Added', 'Play Count', 'Play Date UTC', 'Location']
 TAG_NAMES = ['track_id', 'name', 'artist', 'album', 'genre', 'year', 'size', 'total_time', 'date_added', 'play_count', 'play_date', 'location']
 
 
@@ -9,13 +10,21 @@ class Track:
 
 	def __init__(self, track_id=-1, name=None, artist=None, album=None, genre=None, year=0, size=0, total_time=0, date_added=None, play_count=0, play_date=None, location=None):
 		"""Initializes a Track object with specified data."""
+		if isinstance(year, str):
+			# If year is a string, take the first occurrence of 4 consecutive numbers as the year
+			match = re.search('[0-9]{4}', year)
+			if match:
+				year = year[match.start():match.end()]
+			else:
+				year = 0
+
 		self.data = {
 			'track_id': int(track_id),
 			'name': name,
 			'artist': artist,
 			'album': album,
 			'genre': genre,
-			'year': year,
+			'year': int(year),
 			'size': int(size),
 			'total_time': int(total_time),
 			'date_added': date_added,

@@ -2,7 +2,7 @@ from matplotlib import pyplot as plt
 
 
 def barh_plot(d, title, x_label=None, y_label=None):
-	"""Creates a horizontal bar plot of the data in dictionary d."""
+	"""Creates a horizontal bar plot of the data in dictionary d with keys as labels and values as values."""
 	# Plot artists and play counts
 	plt.rcdefaults()
 	fig, ax = plt.subplots()

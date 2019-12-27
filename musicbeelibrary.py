@@ -86,9 +86,3 @@ class MBLibrary:
 
 	def __rsub__(self, other):
 		return MBLibrary(tracks=self.tracks)
-
-	def __add__(self, other):
-		pass
-
-	def __radd__(self, other):
-		pass

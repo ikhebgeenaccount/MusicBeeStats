@@ -30,13 +30,19 @@ def show_stats(file_path):
 		# Sums the total play time of songs per artist
 		TagTracker('artist', 'total_time', unique=False),
 		# Calculates the total time played for each artist
-		TagTracker('artist', func=lambda t: t.get('play_count') * t.get('total_time'), unique=False),
+		TagTracker('artist', tag_data=lambda t: t.get('play_count') * t.get('total_time'), unique=False),
 		# Counts the number of songs that start with a particular letter
-		TagTracker(func=lambda t: t.get('name')[0]),
+		TagTracker(tag=lambda t: t.get('name')[0]),
 		# Calculates the total size played for each artist
-		TagTracker('artist', func=lambda t: t.get('play_count') * t.get('size'), unique=False),
+		TagTracker('artist', tag_data=lambda t: t.get('play_count') * t.get('size'), unique=False),
 		# Counts the total play count per release year
 		TagTracker('year', 'play_count', unique=False),
+		# Counts the number of tracks in every duration with intervals of 30s
+		TagTracker(tag=lambda t: int(t.get('total_time')/1000 - (t.get('total_time')/1000) % 30)),
+		# Sums the play count for each interval of 30s of length of songs
+		TagTracker(tag=lambda t: int(t.get('total_time')/1000 - (t.get('total_time')/1000) % 30), tag_data='play_count', unique=False),
+		# Counts the number of songs of artists that start with the same letter as the artists' names
+		TagTracker(tag='artist', tag_data=lambda t:t.get('artist')[0] == t.get('name')[0], unique=False)
 		])
 
 	print(('{:20}{}\n' * 4 + '{:20}{:.1f}h\n' * 2 + '{} {}, {} times for a total of {:.1f} hours')
@@ -48,6 +54,8 @@ def show_stats(file_path):
 					'Total time played:', sum([track.get('play_count') * track.get('total_time') for track in mbl.tracks])/3600000,
 					'Most played:', max(mbl.tracks).get('name'), max(mbl.tracks).get('play_count'), max(mbl.tracks).get('total_time') * max(mbl.tracks).get('play_count')/3600000))
 
+	print(mbl.tagtrackers[12].data)
+
 	sorted_artists_by_play_count = {artist: play_count for artist, play_count in sorted(mbl.tagtrackers[0].data.items(), key=lambda item: item[1], reverse=True)}
 	sorted_genres_by_play_count = {genre: play_count for genre, play_count in sorted(mbl.tagtrackers[1].data.items(), key=lambda item: item[1], reverse=True)}
 	sorted_artists_by_play_count_over_number_of_tracks = {artist: play_count / mbl.tagtrackers[2].data[artist] for artist, play_count in sorted(filter(lambda elem: mbl.tagtrackers[2].data[elem[0]] > 10, mbl.tagtrackers[0].data.items()), key=lambda item: item[1] / mbl.tagtrackers[2].data[item[0]], reverse=True)}
@@ -55,6 +63,9 @@ def show_stats(file_path):
 	sorted_first_letter_song_name = {letter: count for letter, count in sorted(mbl.tagtrackers[7].data.items(), key=lambda item: item[1], reverse=True)}
 	sorted_artists_by_play_size = {artist: size/(1024**2) for artist, size in sorted(mbl.tagtrackers[8].data.items(), key=lambda item: item[1], reverse=True)}
 	sorted_year_by_play_count = {str(year): play_count for year, play_count in sorted(mbl.tagtrackers[9].data.items(), key=lambda item: item[1], reverse=True)}
+	sorted_tracks_by_length = {'{} - {}'.format(base, base + 30): count for base, count in sorted(mbl.tagtrackers[10].data.items(), key=lambda item: item[0])}
+	sorted_tracks_play_count_by_length = {'{} - {}'.format(base, base + 30): count for base, count in sorted(mbl.tagtrackers[11].data.items(), key=lambda item: item[0])}
+	sorted_artist_song_first_letter = {artist: count for artist, count in sorted(mbl.tagtrackers[12].data.items(), key=lambda item: item[1], reverse=True)}
 
 	barh_plot(sorted_artists_by_play_count_over_number_of_tracks, 'Average play count per song per artist', 'Play count')
 	barh_plot(sorted_genres_by_play_count, 'Total play count by genre', 'Play count')
@@ -64,6 +75,9 @@ def show_stats(file_path):
 	barh_plot(sorted_first_letter_song_name, 'Count of songs starting with letter')
 	barh_plot(sorted_artists_by_play_size, 'Play size per artist', 'Play size (mb)')
 	barh_plot(sorted_year_by_play_count, 'Play count by year', 'Play count')
+	barh_plot(sorted_tracks_by_length, 'Amount of tracks per length interval of 30s')
+	barh_plot(sorted_tracks_play_count_by_length, 'Play count per interval of length of song')
+	barh_plot(sorted_artist_song_first_letter, 'Number of songs that start with the same letter as the artist name')
 	# Show all created plots
 	plt.show()
 
@@ -153,7 +167,6 @@ def show_stats_over_time(date_new, new_mbl, date_old, old_mbl):
 def find_closest_mbl(date):
 	found = False
 
-	# Forward slash because glob returns the path with \\ not with /
 	files = glob.glob('libs/*.mbl')
 	diff = 0
 
@@ -161,6 +174,7 @@ def find_closest_mbl(date):
 		# Check the target date with + diff and - diff because either side of the date works
 		# If we find a date that has an mbl file we return the MBLibrary and the date of that MBLibrary
 
+		# Backward slash because glob returns the path with \\ not with /
 		target_date = datetime.date(date.year, date.month, date.day) - datetime.timedelta(days=diff)
 		target_file = 'libs\\{:0>4}{:0>2}{:0>2}.mbl'.format(target_date.year, target_date.month, target_date.day)
 

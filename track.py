@@ -1,14 +1,14 @@
 import json
 import re
 
-TAGS = ['Track ID', 'Name', 'Artist', 'Album', 'Genre', 'Year', 'Size', 'Total Time', 'Date Added', 'Play Count', 'Play Date UTC', 'Location']
-TAG_NAMES = ['track_id', 'name', 'artist', 'album', 'genre', 'year', 'size', 'total_time', 'date_added', 'play_count', 'play_date', 'location']
+TAGS = ['Track ID', 'Name', 'Artist', 'Album', 'Genre', 'Year', 'Size', 'Total Time', 'Date Added', 'Play Count', 'Play Date UTC', 'Location', 'Bit Rate']
+TAG_NAMES = ['track_id', 'name', 'artist', 'album', 'genre', 'year', 'size', 'total_time', 'date_added', 'play_count', 'play_date', 'location', 'bitrate']
 
 
 class Track:
 	"""Track is a data storage class for all data regarding a single track."""
 
-	def __init__(self, track_id=-1, name=None, artist=None, album=None, genre=None, year=0, size=0, total_time=0, date_added=None, play_count=0, play_date=None, location=None):
+	def __init__(self, track_id=-1, name=None, artist=None, album=None, genre=None, year=0, size=0, total_time=0, date_added=None, play_count=0, play_date=None, location=None, bitrate=0):
 		"""Initializes a Track object with specified data."""
 		if isinstance(year, str):
 			# If year is a string, take the first occurrence of 4 consecutive numbers as the year
@@ -30,7 +30,8 @@ class Track:
 			'date_added': date_added,
 			'play_count': int(play_count),
 			'play_date': play_date,
-			'location': location
+			'location': location,
+			'bitrate': int(bitrate)
 		}
 
 	def get(self, identifier_string):

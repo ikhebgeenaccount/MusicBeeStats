@@ -24,13 +24,17 @@ def barh_plot(d, title, x_label=None, y_label=None):
 	ax.invert_yaxis()  # idk why tbh
 
 
-def scatter_plot(nparr, title, x_label=None, y_label=None):
-	"""Creates a scatter plot of the date in dictionary with keys as x values and values as y values."""
+def scatter_plot(x, y, title, subsets=False, x_label=None, y_label=None, color=None, label=None):
 	plt.rcdefaults()
 	fig, ax = plt.subplots()
 
 	# Add data
-	ax.scatter(nparr[..., 0], nparr[..., 1], s=1)
+	if not subsets:
+		ax.scatter(x, y, s=1)
+	else:
+		for i in range(0, len(x)):
+			ax.scatter(x[i], y[i], c=[color[i]], label=label[i], s=5)
+		ax.legend(loc=4, ncol=3)
 
 	# Set title
 	ax.set_title(title)

@@ -57,7 +57,7 @@ class Config:
 
 		# If the path does not exist create it dir by dir
 		if not os.path.exists(path):
-			if path.contains('/'):
+			if '/' in path:
 				dirs = path.split('/')
 			else:
 				dirs = path.split('\\')

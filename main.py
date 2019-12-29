@@ -150,17 +150,17 @@ def read_mbl(file_path):
 	return MBLibrary(tracks=tracks)
 
 
-# Saves the library stats to a datestamped mbl file in the libs folder
+# Saves the library stats to a datestamped mbl file in the mbls folder
 def save_library(mblibrary):
-	if not os.path.exists('libs/'):
-		os.makedirs('libs/')
+	if not os.path.exists('mbls/'):
+		os.makedirs('mbls/')
 
 	dt = datetime.datetime.now()
 	today = '{:0>4}{:0>2}{:0>2}'.format(str(dt.year), str(dt.month), str(dt.day))
-	lib_name = 'libs/{:0>4}{:0>2}{:0>2}.mbl'.format(str(dt.year), str(dt.month), str(dt.day))
+	lib_name = 'mbls/{:0>4}{:0>2}{:0>2}.mbl'.format(str(dt.year), str(dt.month), str(dt.day))
 
 	# Check if today's date is in the list of files, if so don't save anything
-	for file in glob.glob('libs/*.mbl'):
+	for file in glob.glob('mbls/*.mbl'):
 		if today in file:
 			return
 
@@ -234,7 +234,7 @@ def show_stats_over_time(date_new, new_mbl, date_old, old_mbl):
 def find_closest_mbl(date):
 	found = False
 
-	files = glob.glob('libs/*.mbl')
+	files = glob.glob('mbls/*.mbl')
 	diff = 0
 
 	while not found:
@@ -243,13 +243,13 @@ def find_closest_mbl(date):
 
 		# Backward slash because glob returns the path with \\ not with /
 		target_date = datetime.date(date.year, date.month, date.day) - datetime.timedelta(days=diff)
-		target_file = 'libs\\{:0>4}{:0>2}{:0>2}.mbl'.format(target_date.year, target_date.month, target_date.day)
+		target_file = 'mbls\\{:0>4}{:0>2}{:0>2}.mbl'.format(target_date.year, target_date.month, target_date.day)
 
 		if target_file in files:
 			return read_mbl(target_file), target_date
 
 		target_date = datetime.date(date.year, date.month, date.day) + datetime.timedelta(days=diff)
-		target_file = 'libs\\{:0>4}{:0>2}{:0>2}.mbl'.format(target_date.year, target_date.month, target_date.day)
+		target_file = 'mbls\\{:0>4}{:0>2}{:0>2}.mbl'.format(target_date.year, target_date.month, target_date.day)
 
 		if target_file in files:
 			return read_mbl(target_file), target_date

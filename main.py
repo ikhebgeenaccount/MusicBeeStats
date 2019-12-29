@@ -13,7 +13,9 @@ from tagtracker import TagTracker
 from track import Track
 
 # TODO: keep a tally of scores for each month's overview, f1 based? for songs and albums and everything
+#  save the ranks so the point system can be changed without too much hassle
 # TODO: config for days of month and day to show monthly and yearly overview respectively
+# TODO: analyze songs and try to make a profile for songs I like a lot?
 
 
 # Has some predefined plots and stuff, shows lifetime stats as well
@@ -187,7 +189,7 @@ def show_stats_over_time(date_new, new_mbl, date_old, old_mbl):
 	print('Over the last {} days you have added {} new songs and you listened to:'.format((date_new - date_old).days, len(new_mbl.tracks) - len(old_mbl.tracks)))
 
 	# Print top 5 most listened to artists
-	artists_base = '{:>2}. {:28}{:>5}{:>8.1f}h\n'
+	artists_base = '{:>2}. {:28.28}{:>5}{:>8.1f}h\n'
 	artists_final = ''
 	for i in range(0, 5):
 		artists_final += artists_base.format(i+1, sorted_artist_play_count[i][0], sorted_artist_play_count[i][1], tag_mbl.tagtrackers[1].data[sorted_artist_play_count[i][0]]/3600000)
@@ -207,10 +209,10 @@ def show_stats_over_time(date_new, new_mbl, date_old, old_mbl):
 	print(albums_final)
 
 	# Print top 5 most listened to songs
-	songs_base = '{:>2}. {:28.28}{:>5}\n'
+	songs_base = '{:>2}. {:28.28}{:>5}{:>8.1f}h\n'
 	songs_final = ''
 	for i in range(0, 10):
-		songs_final += songs_base.format(i + 1, sorted_subbed[i].get('name'), sorted_subbed[i].get('play_count'))
+		songs_final += songs_base.format(i + 1, sorted_subbed[i].get('name'), sorted_subbed[i].get('play_count'), sorted_subbed[i].get('play_count') * sorted_subbed[i].get('total_time')/3600000)
 
 	print('Songs:')
 	print(songs_final)
@@ -272,11 +274,15 @@ if __name__ == '__main__':
 		# Check for first of the month or new year for stats
 		if today.day == 1 and today.month == 1:
 			# Print yearly stats
-			old_mbl, date_old = find_closest_mbl(datetime.date(today.year - 1, 12, today.day))
+			old_mbl, date_old = find_closest_mbl(datetime.date(today.year - 1, today.month, today.day))
 			show_stats_over_time(today, new_mbl, date_old, old_mbl)
 		if today.day == 1:
 			# Print monthly stats
-			old_mbl, date_old = find_closest_mbl(datetime.date(today.year, today.month - 1, today.day))
+			t_day = today.day
+			t_month = 12 if today.month == 1 else today.month - 1
+			t_year = today.year - 1 if t_month == 12 else today.year
+
+			old_mbl, date_old = find_closest_mbl(datetime.date(t_year, t_month, t_day))
 			show_stats_over_time(today, new_mbl, date_old, old_mbl)
 	else:
 		# User wants to see some interesting stuff

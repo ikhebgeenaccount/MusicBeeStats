@@ -7,6 +7,8 @@ import sys
 import matplotlib.pyplot as plt
 import numpy
 
+import util
+from config import Config
 from musicbeelibrary import MBLibrary
 from plots import barh_plot, scatter_plot
 from tagtracker import TagTracker
@@ -14,6 +16,8 @@ from track import Track
 
 # TODO: keep a tally of scores for each month's overview, f1 based? for songs and albums and everything
 #  save the ranks so the point system can be changed without too much hassle
+#  save it in a Config as 'placement year-month' as value and song name as setting key
+#  ([0-9]*) ([0-9]{4})-([0-9]{2})
 # TODO: config for days of month and day to show monthly and yearly overview respectively
 # TODO: analyze songs and try to make a profile for songs I like a lot?
 
@@ -88,30 +92,30 @@ def show_stats(file_path):
 	# for key in mbl.tagtrackers[13].data.keys():
 	# 	for val in mbl.tagtrackers[13].data[key]:
 	# 		scatter_name_time_length.append([key, val/1000])
-
-	total_size_length_by_bitrate = mbl.tagtrackers[14].data
-
-	groups = list(total_size_length_by_bitrate.keys())
-	x_data = []
-	y_data = []
-	c = 0
-	for arr in total_size_length_by_bitrate.values():
-		x_data.append([])
-		y_data.append([])
-		counter = 1
-		for sub_arr in arr:
-			for value in sub_arr:
-				if counter % 2 == 0:
-					y_data[c].append(round(value/(1024**2), 2))
-				else:
-					x_data[c].append(round(value/1000, 2))
-				counter += 1
-		c += 1
-
-	x_data = numpy.asarray(x_data)
-	y_data = numpy.asarray(y_data)
-
-	color = numpy.asarray([tuple(numpy.random.randint(256, size=3)/255) for key in total_size_length_by_bitrate.keys()])
+	#
+	# total_size_length_by_bitrate = mbl.tagtrackers[14].data
+	#
+	# groups = list(total_size_length_by_bitrate.keys())
+	# x_data = []
+	# y_data = []
+	# c = 0
+	# for arr in total_size_length_by_bitrate.values():
+	# 	x_data.append([])
+	# 	y_data.append([])
+	# 	counter = 1
+	# 	for sub_arr in arr:
+	# 		for value in sub_arr:
+	# 			if counter % 2 == 0:
+	# 				y_data[c].append(round(value/(1024**2), 2))
+	# 			else:
+	# 				x_data[c].append(round(value/1000, 2))
+	# 			counter += 1
+	# 	c += 1
+	#
+	# x_data = numpy.asarray(x_data)
+	# y_data = numpy.asarray(y_data)
+	#
+	# color = numpy.asarray([tuple(numpy.random.randint(256, size=3)/255) for key in total_size_length_by_bitrate.keys()])
 
 	# barh_plot(sorted_artists_by_play_count_over_number_of_tracks, 'Average play count per song per artist', 'Play count')
 	# barh_plot(sorted_genres_by_play_count, 'Total play count by genre', 'Play count')
@@ -128,7 +132,7 @@ def show_stats(file_path):
 	# barh_plot(sorted_album_by_play_time, 'Play time per album', x_label='Play time (h)')
 
 	# scatter_plot(numpy.array(scatter_name_time_length)[..., 0], numpy.array(scatter_name_time_length)[..., 1], 'Length of name vs length of song', x_label='Length of name', y_label='Length of song (s)')
-	scatter_plot(x_data, y_data, 'Length of song vs size of song grouped by bitrate', subsets=True, color=color, label=groups, x_label='Length of song (s)', y_label='Size of song (mb)')
+	# scatter_plot(x_data, y_data, 'Length of song vs size of song grouped by bitrate', subsets=True, color=color, label=groups, x_label='Length of song (s)', y_label='Size of song (mb)')
 
 	# Show all created plots
 	plt.show()
@@ -171,7 +175,12 @@ def save_library(mblibrary):
 
 
 # Shows stats about the difference of play counts between the new library object and the old
-def show_stats_over_time(date_new, new_mbl, date_old, old_mbl):
+def show_stats_over_time(date_new, new_mbl, date_old, old_mbl, update_rankings=False):
+	rank_template = '{:>2} {:>4}-{:>2}'
+	song_rankings = Config('mbls/stats/songs.mba')
+	album_rankings = Config('mbls/stats/albums.mba')
+	artist_rankings = Config('mbls/stats/artists.mba')
+
 	subbed_mbl = new_mbl - old_mbl
 	sorted_subbed = sorted(subbed_mbl.tracks, key=lambda item: item.get('play_count'), reverse=True)
 
@@ -193,6 +202,8 @@ def show_stats_over_time(date_new, new_mbl, date_old, old_mbl):
 	artists_final = ''
 	for i in range(0, 5):
 		artists_final += artists_base.format(i+1, sorted_artist_play_count[i][0], sorted_artist_play_count[i][1], tag_mbl.tagtrackers[1].data[sorted_artist_play_count[i][0]]/3600000)
+		if update_rankings:
+			artist_rankings.add_value(sorted_artist_play_count[i][0], rank_template.format(i+1, date_new.year, date_new.month))
 
 	print('Artists:')
 	print(artists_final)
@@ -203,7 +214,9 @@ def show_stats_over_time(date_new, new_mbl, date_old, old_mbl):
 
 	for i in range(0, 5):
 		albums_final += albums_base.format(i + 1, sorted_albums_play_count[i][0], sorted_albums_play_count[i][1],
-											 tag_mbl.tagtrackers[3].data[sorted_albums_play_count[i][0]] / 3600000)
+											tag_mbl.tagtrackers[3].data[sorted_albums_play_count[i][0]] / 3600000)
+		if update_rankings:
+			album_rankings.add_value(sorted_albums_play_count[i][0], rank_template.format(i+1, date_new.year, date_new.month))
 
 	print('Albums:')
 	print(albums_final)
@@ -213,6 +226,8 @@ def show_stats_over_time(date_new, new_mbl, date_old, old_mbl):
 	songs_final = ''
 	for i in range(0, 10):
 		songs_final += songs_base.format(i + 1, sorted_subbed[i].get('name'), sorted_subbed[i].get('play_count'), sorted_subbed[i].get('play_count') * sorted_subbed[i].get('total_time')/3600000)
+		if update_rankings:
+			song_rankings.add_value(sorted_subbed[i].get('name'), rank_template.format(i+1, date_new.year, date_new.month))
 
 	print('Songs:')
 	print(songs_final)
@@ -271,6 +286,11 @@ if __name__ == '__main__':
 
 		today = datetime.date.today()
 
+		old_mbl, date_old = find_closest_mbl(datetime.date(2019, 12, 25))
+		new_mbl, date_new = find_closest_mbl(datetime.date(2019, 12, 26))
+
+		show_stats_over_time(date_new, new_mbl, date_old, old_mbl, update_rankings=True)
+
 		# Check for first of the month or new year for stats
 		if today.day == 1 and today.month == 1:
 			# Print yearly stats
@@ -283,7 +303,7 @@ if __name__ == '__main__':
 			t_year = today.year - 1 if t_month == 12 else today.year
 
 			old_mbl, date_old = find_closest_mbl(datetime.date(t_year, t_month, t_day))
-			show_stats_over_time(today, new_mbl, date_old, old_mbl)
+			show_stats_over_time(today, new_mbl, date_old, old_mbl, update_rankings=True)
 	else:
 		# User wants to see some interesting stuff
 		show_stats(file_path)

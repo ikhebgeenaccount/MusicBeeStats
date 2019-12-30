@@ -1,5 +1,5 @@
-import os
 import re
+import util
 
 
 def convert_values(values):
@@ -20,17 +20,17 @@ class Config:
 	"""Config file handling."""
 
 	def __init__(self, file_path=None, settings=None):
+		if settings:
+			self.settings = settings
+		else:
+			self.settings = {}
+
 		if file_path:
 			self.file_path = file_path
 			try:
 				self.read_config(file_path)
 			except IOError:
-				print('creating new file')
-
-		if settings:
-			self.settings = settings
-		elif not self.settings:
-			self.settings = {}
+				pass
 
 	def get_setting(self, setting):
 		"""Returns the value of setting."""
@@ -67,16 +67,7 @@ class Config:
 		# Passed file path to this function takes precedence over stored file path in instance
 		path = file_path if file_path else self.file_path
 
-		# If the path does not exist create it dir by dir
-		if not os.path.exists(path):
-			if '/' in path:
-				dirs = path.split('/')
-			else:
-				dirs = path.split('\\')
-			# The last part of dirs is the filename itself which will be created with the open call later
-			for i in range(0, len(dirs) - 1):
-				if not os.path.exists(os.path.join(*dirs[0:i+1])):
-					os.mkdir(os.path.join(*dirs[0:i+1]))
+		util.create_path(path)
 
 		# Save the settings to path
 		with open(path, 'w') as out:
@@ -84,7 +75,11 @@ class Config:
 			for key in self.settings.keys():
 				value = self.settings[key]
 				if type(value) is list:
-					out.write(template.format(key, str(value)[1:-1].replace(', ', ',')))
+					r = ''
+					for v in value:
+						r += v + ','
+					r = r[0:-1]  # Get rid of the trailing comma
+					out.write(template.format(key, r))
 				else:
 					out.write(template.format(key, value))
 

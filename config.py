@@ -8,11 +8,9 @@ def convert_values(values):
 	try:
 		return [int(x) for x in values]
 	except ValueError:
-		print('not ints')
 		try:
 			return [float(x) for x in values]
 		except ValueError:
-			print('not floats')
 			return values
 
 

@@ -14,10 +14,6 @@ from plots import barh_plot, scatter_plot
 from tagtracker import TagTracker
 from track import Track
 
-# TODO: keep a tally of scores for each month's overview, f1 based? for songs and albums and everything
-#  save the ranks so the point system can be changed without too much hassle
-#  save it in a Config as 'placement year-month' as value and song name as setting key
-#  ([0-9]*) ([0-9]{4})-([0-9]{2})
 # TODO: config for days of month and day to show monthly and yearly overview respectively
 # TODO: analyze songs and try to make a profile for songs I like a lot?
 
@@ -176,7 +172,7 @@ def save_library(mblibrary):
 
 # Shows stats about the difference of play counts between the new library object and the old
 def show_stats_over_time(date_new, new_mbl, date_old, old_mbl, update_rankings=False):
-	rank_template = '{:>2} {:>4}-{:>2}'
+	rank_template = '{:>2} {:>4}-{:>2}'  # regex: ([0-9]*) ([0-9]{4})-([0-9]{2})
 	song_rankings = Config('mbls/stats/songs.mba')
 	album_rankings = Config('mbls/stats/albums.mba')
 	artist_rankings = Config('mbls/stats/artists.mba')

@@ -2,37 +2,34 @@ import os
 import re
 
 
-def read_config(file_path):
-	"""Reads the file at file_path into a Config, and returns that Config."""
-	pattern = re.compile('^(.*)=[(.*),]*(.*)$')
-	settings = {}
-	with open(file_path, 'r') as config_file:
-		for line in config_file:
-			m = pattern.match(line)
-			name = m.group(1)  # name of setting
-			values = m.group(2).split(',')  # value(s) of setting
-			if len(values) > 1:
-				# List of values
-				settings[name] = values
-			else:
-				# Only one value
-				settings[name] = values[0]
-
-	return Config(file_path=file_path, settings=settings)
+def convert_values(values):
+	"""Attempts to convert list of values to integers, if that does not succeed it tries floats, if that doesn not
+	succeed it returns the original list. """
+	try:
+		return [int(x) for x in values]
+	except ValueError:
+		print('not ints')
+		try:
+			return [float(x) for x in values]
+		except ValueError:
+			print('not floats')
+			return values
 
 
 class Config:
-	"""Config file handling.
-
-	Do NOT enter commas into the values for settings. It will break."""
+	"""Config file handling."""
 
 	def __init__(self, file_path=None, settings=None):
 		if file_path:
 			self.file_path = file_path
+			try:
+				self.read_config(file_path)
+			except IOError:
+				print('creating new file')
 
 		if settings:
 			self.settings = settings
-		else:
+		elif not self.settings:
 			self.settings = {}
 
 	def get_setting(self, setting):
@@ -43,8 +40,23 @@ class Config:
 
 	def set_setting(self, setting, value):
 		"""Changes the value of setting to value and saves the settings to disk."""
+		if type(setting) is str and '=' in setting:
+			raise ValueError(f'= in {setting} but not allowed in setting name.')
+		if type(value) is str and ',' in value:
+			raise ValueError(f', in {value} but not allowed in setting value.')
 		self.settings[setting] = value
 		self.save_settings()
+
+	def add_value(self, setting, value):
+		"""Adds value to the setting, appending to anything already there."""
+		if setting not in self.settings.keys():
+			self.set_setting(setting, value)
+		else:
+			if type(self.get_setting(setting)) is list:
+				self.get_setting(setting).append(value)
+				self.save_settings()
+			else:
+				self.set_setting(setting, [self.get_setting(setting), value])
 
 	def save_settings(self, file_path=None):
 		"""Saves the settings to disk. If no file_path is specified anywhere raises a ValueError."""
@@ -75,3 +87,19 @@ class Config:
 					out.write(template.format(key, str(value)[1:-1].replace(', ', ',')))
 				else:
 					out.write(template.format(key, value))
+
+	def read_config(self, file_path):
+		"""Reads the file at file_path into a Config, and returns that Config."""
+		with open(file_path, 'r') as config_file:
+			pattern = re.compile('^(.*)=[(.*),]*(.*)$')
+			self.settings = {}
+			for line in config_file:
+				m = pattern.match(line)
+				name = m.group(1)  # name of setting
+				values = m.group(2).split(',')  # value(s) of setting
+				if len(values) > 1:
+					# List of values
+					self.settings[name] = convert_values(values)
+				else:
+					# Only one value
+					self.settings[name] = convert_values(values)[0]

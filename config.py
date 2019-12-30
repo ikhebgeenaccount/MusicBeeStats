@@ -68,7 +68,7 @@ class Config:
 		util.create_path(path)
 
 		# Save the settings to path
-		with open(path, 'w') as out:
+		with open(path, 'w', encoding='utf-8') as out:
 			template = '{}={}\n'
 			for key in self.settings.keys():
 				value = self.settings[key]
@@ -83,7 +83,7 @@ class Config:
 
 	def read_config(self, file_path):
 		"""Reads the file at file_path into a Config, and returns that Config."""
-		with open(file_path, 'r') as config_file:
+		with open(file_path, 'r', encoding='utf-8') as config_file:
 			pattern = re.compile('^(.*)=[(.*),]*(.*)$')
 			self.settings = {}
 			for line in config_file:

@@ -75,7 +75,10 @@ class Config:
 				if type(value) is list:
 					r = ''
 					for v in value:
-						r += v + ','
+						if type(v) is str:
+							r += v + ','
+						else:
+							r += str(v) + ','
 					r = r[0:-1]  # Get rid of the trailing comma
 					out.write(template.format(key, r))
 				else:
@@ -87,6 +90,9 @@ class Config:
 			pattern = re.compile('^(.*)=[(.*),]*(.*)$')
 			self.settings = {}
 			for line in config_file:
+				# Check if line is a comment
+				if line[0] == '#':
+					continue
 				m = pattern.match(line)
 				name = m.group(1)  # name of setting
 				values = m.group(2).split(',')  # value(s) of setting

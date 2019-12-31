@@ -1,6 +1,6 @@
 import xml.etree.ElementTree as ET
-import track
-from track import Track
+from mbp import track
+from mbp.track import Track
 
 
 class MBLibrary:

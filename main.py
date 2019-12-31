@@ -7,14 +7,12 @@ import sys
 import matplotlib.pyplot as plt
 import numpy
 
-import util
-from config import Config
-from musicbeelibrary import MBLibrary
-from plots import barh_plot, scatter_plot
-from tagtracker import TagTracker
-from track import Track
+from mbp.config import Config
+from mbp.musicbeelibrary import MBLibrary
+from mbp.plots import barh_plot, scatter_plot
+from mbp.tagtracker import TagTracker
+from mbp.track import Track
 
-# TODO: config for days of month and day to show monthly and yearly overview respectively
 # TODO: analysis of the rankings in the mba files
 # TODO: analyze songs and try to make a profile for songs I like a lot?
 
@@ -174,9 +172,9 @@ def save_library(mblibrary):
 # Shows stats about the difference of play counts between the new library object and the old
 def show_stats_over_time(date_new, new_mbl, date_old, old_mbl, update_rankings=False):
 	rank_template = '{:>2} {:>4}-{:>2}'  # regex: ([0-9]*) ([0-9]{4})-([0-9]{2})
-	song_rankings = Config('mbls/stats/songs.mba')
-	album_rankings = Config('mbls/stats/albums.mba')
-	artist_rankings = Config('mbls/stats/artists.mba')
+	song_rankings = Config('mbls/stats/songs.mbr')
+	album_rankings = Config('mbls/stats/albums.mbr')
+	artist_rankings = Config('mbls/stats/artists.mbr')
 
 	subbed_mbl = new_mbl - old_mbl
 	sorted_subbed = sorted(subbed_mbl.tracks, key=lambda item: item.get('play_count'), reverse=True)
@@ -274,6 +272,15 @@ if __name__ == '__main__':
 		print('Use this program as follows: python main.py PATH_TO_FILE [-saveOnly]')
 		sys.exit()
 
+	# Load or create config
+	config = Config('config,mbc')
+
+	# Check if settings exist, otherwise create default
+	if not config.get_setting('year'):
+		config.set_setting('year', [1,1])
+	if not config.get_setting('month'):
+		config.set_setting('month', 1)
+
 	file_path = sys.argv[1]
 
 	if len(sys.argv) > 1 and '-saveOnly' in sys.argv:
@@ -284,11 +291,11 @@ if __name__ == '__main__':
 		today = datetime.date.today()
 
 		# Check for first of the month or new year for stats
-		if today.day == 1 and today.month == 1:
+		if today.day == config.get_setting('year')[0] and today.month == config.get_setting('year')[1]:
 			# Print yearly stats
 			old_mbl, date_old = find_closest_mbl(datetime.date(today.year - 1, today.month, today.day))
 			show_stats_over_time(today, new_mbl, date_old, old_mbl)
-		if today.day == 1:
+		if today.day == config.get_setting('month'):
 			# Print monthly stats
 			t_day = today.day
 			t_month = 12 if today.month == 1 else today.month - 1

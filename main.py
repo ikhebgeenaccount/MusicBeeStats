@@ -274,7 +274,7 @@ if __name__ == '__main__':
 		sys.exit()
 
 	# Load or create config
-	config = Config('config,mbc')
+	config = Config('config.mbc')
 
 	# Check if settings exist, otherwise create default
 	if not config.get_setting('year'):

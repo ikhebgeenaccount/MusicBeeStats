@@ -177,6 +177,13 @@ def show_stats_over_time(date_new, new_mbl, date_old, old_mbl, update_rankings=F
 	album_rankings = Config('mbls/stats/albums.mbr')
 	artist_rankings = Config('mbls/stats/artists.mbr')
 
+	# Check if we have already saved rankings for this month
+	rankings_date = '{:0>4}-{:0>2}'.format(date_new.year, date_new.month)
+	for r in song_rankings.settings.values():
+		if rankings_date in r:
+			update_rankings = False
+			break
+
 	subbed_mbl = new_mbl - old_mbl
 	sorted_subbed = sorted(subbed_mbl.tracks, key=lambda item: item.get('play_count'), reverse=True)
 

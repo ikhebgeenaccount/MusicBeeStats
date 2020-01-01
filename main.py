@@ -13,7 +13,8 @@ from mbp.plots import barh_plot, scatter_plot
 from mbp.tagtracker import TagTracker
 from mbp.track import Track
 
-# TODO: analysis of the rankings in the mba files
+
+# TODO: analysis of the rankings in the mbr files
 # TODO: analyze songs and try to make a profile for songs I like a lot?
 
 
@@ -171,7 +172,7 @@ def save_library(mblibrary):
 
 # Shows stats about the difference of play counts between the new library object and the old
 def show_stats_over_time(date_new, new_mbl, date_old, old_mbl, update_rankings=False):
-	rank_template = '{:>2} {:>4}-{:>2}'  # regex: ([0-9]*) ([0-9]{4})-([0-9]{2})
+	rank_template = '{:0>2} {:0>4}-{:0>2}'  # regex: ([0-9]*) ([0-9]{4})-([0-9]{2})
 	song_rankings = Config('mbls/stats/songs.mbr')
 	album_rankings = Config('mbls/stats/albums.mbr')
 	artist_rankings = Config('mbls/stats/artists.mbr')
@@ -291,11 +292,8 @@ if __name__ == '__main__':
 		today = datetime.date.today()
 
 		# Check for first of the month or new year for stats
-		if today.day == config.get_setting('year')[0] and today.month == config.get_setting('year')[1]:
-			# Print yearly stats
-			old_mbl, date_old = find_closest_mbl(datetime.date(today.year - 1, today.month, today.day))
-			show_stats_over_time(today, new_mbl, date_old, old_mbl)
 		if today.day == config.get_setting('month'):
+			print('monthly')
 			# Print monthly stats
 			t_day = today.day
 			t_month = 12 if today.month == 1 else today.month - 1
@@ -303,6 +301,11 @@ if __name__ == '__main__':
 
 			old_mbl, date_old = find_closest_mbl(datetime.date(t_year, t_month, t_day))
 			show_stats_over_time(today, new_mbl, date_old, old_mbl, update_rankings=True)
+		if today.day == config.get_setting('year')[0] and today.month == config.get_setting('year')[1]:
+			print('yearly')
+			# Print yearly stats
+			old_mbl, date_old = find_closest_mbl(datetime.date(today.year - 1, today.month, today.day))
+			show_stats_over_time(today, new_mbl, date_old, old_mbl)
 	else:
 		# User wants to see some interesting stuff
 		show_stats(file_path)

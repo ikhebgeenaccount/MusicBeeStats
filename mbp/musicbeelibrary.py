@@ -73,7 +73,7 @@ class MBLibrary:
 		tracks_self = [None] * (max_track_id_self + 1)
 		# Add all self tracks to list
 		for t in self.tracks:
-			tracks_self[t.get('track_id')] = t
+			tracks_self[t.get('track_id')] = Track(**t.data)
 
 		# Loop over other's tracks and subtract them with a None check before
 		for t in other.tracks:

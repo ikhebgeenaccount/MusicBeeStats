@@ -208,7 +208,7 @@ def show_stats_over_time(date_new, new_mbl, date_old, old_mbl, update_rankings=F
 		if update_rankings:
 			artist_rankings.add_value(sorted_artist_play_count[i][0], rank_template.format(i+1, date_new.year, date_new.month))
 
-	print('Artists:')
+	print('{} artists:'.format(sum([1 for p_c in tag_mbl.tagtrackers[0].data.values() if p_c > 0])))
 	print(artists_final)
 
 	# Print top 5 most listened to albums
@@ -221,7 +221,7 @@ def show_stats_over_time(date_new, new_mbl, date_old, old_mbl, update_rankings=F
 		if update_rankings:
 			album_rankings.add_value(sorted_albums_play_count[i][0], rank_template.format(i+1, date_new.year, date_new.month))
 
-	print('Albums:')
+	print('{} albums:'.format(sum([1 for p_c in tag_mbl.tagtrackers[2].data.values() if p_c > 0])))
 	print(albums_final)
 
 	# Print top 5 most listened to songs
@@ -232,7 +232,7 @@ def show_stats_over_time(date_new, new_mbl, date_old, old_mbl, update_rankings=F
 		if update_rankings:
 			song_rankings.add_value(sorted_subbed[i].get('name'), rank_template.format(i+1, date_new.year, date_new.month))
 
-	print('Songs:')
+	print('{} songs:'.format(sum([1 for t in tag_mbl.tracks if t.get('play_count') > 0])))
 	print(songs_final)
 
 	# Print total stats

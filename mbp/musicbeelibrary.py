@@ -1,6 +1,6 @@
 import xml.etree.ElementTree as ET
 from mbp import track
-from mbp.track import Track
+from mbp.track import Track, encode_track
 
 
 class MBLibrary:
@@ -65,25 +65,28 @@ class MBLibrary:
 				self.tracks.append(t)
 
 	# Arithmetic functions only subtract and add play counts of same tracks
-	# Assumptions: self.tracks > other.tracks and equal track_id means same song
-	# So (new library stats) - (old library stats) will work as new library will at least have higher track ids than the
-	# old library stats, vice versa DOES NOT WORK
+	# Assumptions: locations of music files are equal between libraries
+	# If not the case, change Track.encode_track
 	def __sub__(self, other):
-		max_track_id_self = max([t.get('track_id') for t in self.tracks])
-		tracks_self = [None] * (max_track_id_self + 1)
-		# Add all self tracks to list
+		tracks_new = {}
+		# Add all self tracks to dict
 		for t in self.tracks:
-			tracks_self[t.get('track_id')] = Track(**t.data)
+			tracks_new[encode_track(t)] = Track(**t.data)
 
 		# Loop over other's tracks and subtract them with a None check before
 		for t in other.tracks:
-			# Only subtract if you find a corresponding track
-			if tracks_self[t.get('track_id')]:
-				tracks_self[t.get('track_id')].data['play_count'] -= t.get('play_count')
+			try:
+				if encode_track(t) in tracks_new:
+					# Subtract if you find the same track in the other MBL
+					tracks_new[encode_track(t)].data['play_count'] -= t.get('play_count')
+					# Remove the track if the play count results to 0
+					if tracks_new[encode_track(t)].data['play_count'] == 0:
+						del tracks_new[encode_track(t)]
+			except IndexError:
+				print(t.get('track_id'), t.get('name'))
 
-		# Remove the None entries from the resulting tracks_self
 		# Create a new MBLibrary with that list of tracks
-		return MBLibrary(tracks=[subbed_track for subbed_track in tracks_self if subbed_track])
+		return MBLibrary(tracks=list(tracks_new.values()))
 
 	def __rsub__(self, other):
 		return MBLibrary(tracks=self.tracks)

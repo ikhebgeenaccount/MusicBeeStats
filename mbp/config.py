@@ -42,7 +42,10 @@ class Config:
 			raise ValueError(f'= in {setting} but not allowed in setting name.')
 		if type(value) is str and ',' in value:
 			raise ValueError(f', in {value} but not allowed in setting value.')
-		self.settings[setting] = value
+		if isinstance(value, list):
+			self.settings[setting] = value
+		else:
+			self.settings[setting] = [value]
 		self.save_settings()
 
 	def add_value(self, setting, value):
@@ -55,6 +58,12 @@ class Config:
 				self.save_settings()
 			else:
 				self.set_setting(setting, [self.get_setting(setting), value])
+
+	def remove_value(self, setting, value):
+		"""Removes the value from setting. If value not in setting raises a ValueError."""
+		if value not in self.get_setting(setting):
+			raise ValueError(f'Value {value} not in setting {setting}')
+		self.set_setting(setting, [v for v in self.get_setting(setting) if v != value])
 
 	def save_settings(self, file_path=None):
 		"""Saves the settings to disk. If no file_path is specified anywhere raises a ValueError."""
@@ -96,9 +105,4 @@ class Config:
 				m = pattern.match(line)
 				name = m.group(1)  # name of setting
 				values = m.group(2).split(',')  # value(s) of setting
-				if len(values) > 1:
-					# List of values
-					self.settings[name] = convert_values(values)
-				else:
-					# Only one value
-					self.settings[name] = convert_values(values)[0]
+				self.settings[name] = convert_values(values)

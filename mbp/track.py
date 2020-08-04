@@ -5,6 +5,10 @@ TAGS = ['Track ID', 'Name', 'Artist', 'Album', 'Genre', 'Year', 'Size', 'Total T
 TAG_NAMES = ['track_id', 'name', 'artist', 'album', 'genre', 'year', 'size', 'total_time', 'date_added', 'play_count', 'play_date', 'location', 'bitrate']
 
 
+def encode_track(track):
+	return track.get('location')
+
+
 class Track:
 	"""Track is a data storage class for all data regarding a single track."""
 

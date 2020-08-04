@@ -61,13 +61,13 @@ class TagTracker:
 				# Check if this is a new tag we track
 				if key in self.data.keys():
 					# If not, add up if it's a number, otherwise append to list
-					if not self.unique and isinstance(value, int):
+					if not self.unique and (isinstance(value, int) or isinstance(value, float)):
 						self.data[key] += value
 					else:
 						self.data[key].append(value)
 				else:
 					# It's a new tag, add as a new number or list
-					if not self.unique and isinstance(value, int):
+					if not self.unique and (isinstance(value, int) or isinstance(value, float)):
 						self.data[key] = value
 					else:
 						self.data[key] = [value]
@@ -80,12 +80,12 @@ class TagTracker:
 					self.case_map[value.lower()] = value
 
 				if value in self.data.keys():
-					if not self.unique and isinstance(value, int):
+					if not self.unique and (isinstance(value, int) or isinstance(value, float)):
 						self.data[value] += value
 					else:
 						self.data[value] += 1
 				else:
-					if not self.unique and isinstance(value, int):
+					if not self.unique and (isinstance(value, int) or isinstance(value, float)):
 						self.data[value] = value
 					else:
 						self.data[value] = 1

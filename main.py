@@ -4,13 +4,14 @@ import json
 import os
 import sys
 
+import dateutil
 import matplotlib.pyplot as plt
 import numpy
 
 from mbp.config import Config
 from mbp.musicbeelibrary import MBLibrary
 from mbp.plots import barh_plot, scatter_plot
-from mbp.ranking import Ranking
+from mbp.ranking import Ranking, ColumnTitle
 from mbp.tagtracker import TagTracker
 from mbp.track import Track
 
@@ -194,107 +195,87 @@ def save_library(mblibrary):
 
 
 # Shows stats about the difference of play counts between the new library object and the old
-def show_stats_over_time(date_new, new_mbl, date_old, old_mbl, update_rankings=False):
-	# TODO: add change since last overview (prob only monthly)
-	rank_template = '{:0>2} {:0>4}-{:0>2}'  # regex: ([0-9]*) ([0-9]{4})-([0-9]{2})
-	song_rankings = Config('mbls/stats/songs.mbr')
-	album_rankings = Config('mbls/stats/albums.mbr')
-	artist_rankings = Config('mbls/stats/artists.mbr')
+def show_stats_over_time(date=datetime.date.today(), month_diff=1):
+	# Find relevant MBLibraries
+	new_mbl, new_mbl_date = find_closest_mbl(date)
+	old_mbl, old_mbl_date = find_closest_mbl(date - dateutil.relativedelta.relativedelta(months=month_diff))
+	oldest_mbl, oldest_mbl_date = find_closest_mbl(date - dateutil.relativedelta.relativedelta(months=month_diff * 2))
 
-	# Check if we have already saved rankings for this month
-	rankings_date = '{:0>4}-{:0>2}'.format(date_new.year, date_new.month)
-	for r in song_rankings.settings.values():
-		if rankings_date in r:
-			update_rankings = False
-			break
-
+	# Subtract the old stats from the new stats to get the stats over time
 	subbed_mbl = new_mbl - old_mbl
-	sorted_subbed = sorted(subbed_mbl.tracks, key=lambda item: item.get('play_count'), reverse=True)
 
-	tracker_artist_play_coount = TagTracker('artist', 'play_count', unique=False)
-	tracker_artist_song_count = TagTracker('artist')
-	tracker_artist_play_time = TagTracker('artist', tag_data=lambda item: item.get('play_count') * item.get('total_time') / 3600000, unique=False)
-	tracker_album_play_count = TagTracker('album', 'play_count', unique=False)
-	tracker_album_play_time = TagTracker('album', tag_data=lambda item: item.get('play_count') * item.get('total_time') / 3600000, unique=False)
-	tracker_song_play_count = TagTracker('song', 'play_count', unique=False)
-	tag_mbl = MBLibrary(tracks=subbed_mbl.tracks, tagtrackers=[
-		tracker_artist_play_coount,
-		tracker_artist_song_count,
-		tracker_artist_play_time,
-		tracker_album_play_count,
-		tracker_album_play_time,
-		tracker_song_play_count
+	# Get the stats from the last overview
+	old_subbed_mbl = old_mbl - oldest_mbl
+
+	# Track stats
+	new_tracker_artist_play_coount = TagTracker('artist', 'play_count', unique=False)
+	new_tracker_artist_song_count = TagTracker('artist')
+	new_tracker_artist_play_time = TagTracker('artist', tag_data=lambda item: item.get('play_count') * item.get('total_time') / 3600000, unique=False)
+	new_tracker_album_play_count = TagTracker('album', 'play_count', unique=False)
+	new_tracker_album_play_time = TagTracker('album', tag_data=lambda item: item.get('play_count') * item.get('total_time') / 3600000, unique=False)
+	new_tracker_song_play_count = TagTracker('name', 'play_count', unique=False)
+	new_tracker_song_play_time = TagTracker('name', tag_data=lambda item: item.get('play_count') * item.get('total_time') / 3600000, unique=False)
+	new_tag_mbl = MBLibrary(tracks=subbed_mbl.tracks, tagtrackers=[
+		new_tracker_artist_play_coount,
+		new_tracker_artist_song_count,
+		new_tracker_artist_play_time,
+		new_tracker_album_play_count,
+		new_tracker_album_play_time,
+		new_tracker_song_play_count,
+		new_tracker_song_play_time
 	])
 
-	artist_ranking = Ranking(tracker_artist_play_coount, '{:>5}')
-	artist_ranking.add_tagtracker(tracker_artist_play_time, '{:>8.1f}h')
-	artist_ranking.add_tagtracker(tracker_artist_song_count, '{:>5}')
+	old_tracker_artist_play_coount = TagTracker('artist', 'play_count', unique=False)
+	old_tracker_artist_song_count = TagTracker('artist')
+	old_tracker_artist_play_time = TagTracker('artist', tag_data=lambda item: item.get('play_count') * item.get('total_time') / 3600000, unique=False)
+	old_tracker_album_play_count = TagTracker('album', 'play_count', unique=False)
+	old_tracker_album_play_time = TagTracker('album', tag_data=lambda item: item.get('play_count') * item.get('total_time') / 3600000, unique=False)
+	old_tracker_song_play_count = TagTracker('name', 'play_count', unique=False)
+	old_tracker_song_play_time = TagTracker('name', tag_data=lambda item: item.get('play_count') * item.get('total_time') / 3600000, unique=False)
+	old_tag_mbl = MBLibrary(tracks=old_subbed_mbl.tracks, tagtrackers=[
+		old_tracker_artist_play_coount,
+		old_tracker_artist_song_count,
+		old_tracker_artist_play_time,
+		old_tracker_album_play_count,
+		old_tracker_album_play_time,
+		old_tracker_song_play_count,
+		old_tracker_song_play_time
+	])
 
-	print(artist_ranking.get_string())
+	# Create Artist ranking
+	artist_ranking = Ranking(new_tracker_artist_play_coount, '{:>5}', diff_ranking=Ranking(old_tracker_artist_play_coount, '{:>5}'), col_titles=[ColumnTitle('Artist'), ColumnTitle('Plays', '{:>5}')])
+	artist_ranking.add_tagtracker(new_tracker_artist_play_time, '{:>8.1f}h', col_title=ColumnTitle('Time', '{:>9}'))
+	artist_ranking.add_tagtracker(new_tracker_artist_song_count, '{:>6}', col_title=ColumnTitle('Songs', '{:>6}'))
 
-	album_ranking = Ranking(tracker_album_play_count, '{:>5}')
-	album_ranking.add_tagtracker(tracker_album_play_time, '{:>8.1f}h')
+	# Create Album ranking
+	album_ranking = Ranking(new_tracker_album_play_count, '{:>5}', diff_ranking=Ranking(old_tracker_album_play_count, '{:>5}'), col_titles=[ColumnTitle('Album'), ColumnTitle('Plays')])
+	album_ranking.add_tagtracker(new_tracker_album_play_time, '{:>8.1f}h', col_title=ColumnTitle('Time', '{:>9}'))
 
-	print(album_ranking.get_string())
+	# Create Song ranking
+	song_ranking = Ranking(new_tracker_song_play_count, '{:>5}', diff_ranking=Ranking(old_tracker_song_play_count, '{:>5}'), col_titles=[ColumnTitle('Song'), ColumnTitle('Plays')])
+	song_ranking.add_tagtracker(new_tracker_song_play_time, '{:>8.1f}h', col_title=ColumnTitle('Time', '{:>9}'))
 
-	sys.exit()
-
-	print(tag_mbl.tagtrackers[0].data.items())
-
-	sorted_artist_play_count = sorted(tag_mbl.tagtrackers[0].data.items(), key=lambda item: item[1], reverse=True)
-	sorted_albums_play_count = sorted(tag_mbl.tagtrackers[2].data.items(), key=lambda item: item[1], reverse=True)
-
-	print('Over the last {} days you have added {} new songs and you listened to:'.format((date_new - date_old).days,
-																						  len(new_mbl.tracks) - len(
-																							  old_mbl.tracks)))
+	# Print all the stuff
+	print('Over the last {} days you have added {} new songs and you listened to:'.format((new_mbl_date - old_mbl_date).days, len(new_mbl.tracks) - len(old_mbl.tracks)))
 
 	# Print top 5 most listened to artists
-	artists_base = '{:>2}. {:28.28}{:>5}{:>8.1f}h\n'
-	artists_final = ''
-	for i in range(0, 10):
-		artists_final += artists_base.format(i + 1, sorted_artist_play_count[i][0], sorted_artist_play_count[i][1],
-											 tag_mbl.tagtrackers[1].data[sorted_artist_play_count[i][0]])
-		if update_rankings:
-			artist_rankings.add_value(sorted_artist_play_count[i][0],
-									  rank_template.format(i + 1, date_new.year, date_new.month))
-
-	print('{} artists:'.format(sum([1 for p_c in tag_mbl.tagtrackers[0].data.values() if p_c > 0])))
-	print(artists_final)
+	print('{} artists:'.format(sum([1 for p_c in new_tracker_artist_play_coount.data.values() if p_c > 0])))
+	print(artist_ranking.get_string())
 
 	# Print top 5 most listened to albums
-	albums_base = '{:>2}. {:28.28}{:>5}{:>8.1f}h\n'
-	albums_final = ''
-
-	for i in range(0, 5):
-		albums_final += albums_base.format(i + 1, sorted_albums_play_count[i][0], sorted_albums_play_count[i][1],
-										   tag_mbl.tagtrackers[3].data[sorted_albums_play_count[i][0]])
-		if update_rankings:
-			album_rankings.add_value(sorted_albums_play_count[i][0],
-									 rank_template.format(i + 1, date_new.year, date_new.month))
-
-	print('{} albums:'.format(sum([1 for p_c in tag_mbl.tagtrackers[2].data.values() if p_c > 0])))
-	print(albums_final)
+	print('{} albums:'.format(sum([1 for p_c in new_tracker_album_play_count.data.values() if p_c > 0])))
+	print(album_ranking.get_string())
 
 	# Print top 5 most listened to songs
-	songs_base = '{:>2}. {:28.28}{:>5}{:>8.1f}h\n'
-	songs_final = ''
-	for i in range(0, 10):
-		songs_final += songs_base.format(i + 1, sorted_subbed[i].get('name'), sorted_subbed[i].get('play_count'),
-										 sorted_subbed[i].get('play_count') * sorted_subbed[i].get(
-											 'total_time') / 3600000)
-		if update_rankings:
-			song_rankings.add_value(sorted_subbed[i].get('name'),
-									rank_template.format(i + 1, date_new.year, date_new.month))
-
-	print('{} songs:'.format(sum([1 for t in tag_mbl.tracks if t.get('play_count') > 0])))
-	print(songs_final)
+	print('{} songs:'.format(sum([1 for t in new_tag_mbl.tracks if t.get('play_count') > 0])))
+	print(song_ranking.get_string())
 
 	# Print total stats
 	print('All combined this makes for:\n'
 		  ' {} total play count\n'
 		  ' {:.1f}h total hours listened'
-		  .format(str(sum(tag_mbl.tracks).get('play_count')),
-				  sum([track.get('play_count') * track.get('total_time') for track in tag_mbl.tracks]) / 3600000))
+		  .format(str(sum(new_tag_mbl.tracks).get('play_count')),
+				  sum([track.get('play_count') * track.get('total_time') for track in new_tag_mbl.tracks]) / 3600000))
 
 	print('\nPress enter to close this overview')
 	input()
@@ -329,7 +310,14 @@ def find_closest_mbl(date):
 		diff += 1
 
 
+def debug():
+	show_stats_over_time(datetime.date(2020, 8, 1))
+
+
 if __name__ == '__main__':
+	if '-debug' in sys.argv:
+		debug()
+
 	if len(sys.argv) < 2:
 		print('Use this program as follows: python main.py PATH_TO_FILE [-saveOnly]')
 		sys.exit()
@@ -345,7 +333,7 @@ if __name__ == '__main__':
 
 	file_path = sys.argv[1]
 
-	if (len(sys.argv) > 1 and '-saveOnly' in sys.argv) or '-debug' in sys.argv:
+	if len(sys.argv) > 1 and '-saveOnly' in sys.argv:
 		# User only wants to save the stats, not show any graphs and shit
 		new_mbl = read_library_xml(file_path)
 
@@ -355,19 +343,11 @@ if __name__ == '__main__':
 		today = datetime.date.today()
 
 		# Check for first of the month or new year for stats
-		if today.day == config.get_setting('month')[0] or '-debug' in sys.argv:
-			# Print monthly stats
-			t_day = today.day
-			t_month = 12 if today.month == 1 else today.month - 1
-			t_year = today.year - 1 if t_month == 12 else today.year
-
-			old_mbl, date_old = find_closest_mbl(datetime.date(t_year, t_month, t_day))
-			new_mbl, _ = find_closest_mbl(today)
-			show_stats_over_time(today, new_mbl, date_old, old_mbl, update_rankings=True)
+		if today.day == config.get_setting('month')[0]:
+			show_stats_over_time()
 		if today.day == config.get_setting('year')[0] and today.month == config.get_setting('year')[1]:
 			# Print yearly stats
-			old_mbl, date_old = find_closest_mbl(datetime.date(today.year - 1, today.month, today.day))
-			show_stats_over_time(today, new_mbl, date_old, old_mbl)
+			show_stats_over_time(month_diff=12)
 	else:
 		# User wants to see some interesting stuff
 		show_stats(file_path)

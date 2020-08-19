@@ -16,6 +16,9 @@ from mbp.tagtracker import TagTracker
 from mbp.track import Track
 
 
+# TODO: fix MBLirary subtraction: subtracting one from itself results in ValueError (MBLibrary tracks list is empty which results in (if tracks:) being false)
+
+
 # Has some predefined plots and stuff, shows lifetime stats as well
 def show_stats(file_path):
 	print('MusicBee Stats')
@@ -310,13 +313,7 @@ def find_closest_mbl(date):
 		diff += 1
 
 
-def debug():
-	show_stats_over_time(datetime.date(2020, 8, 1))
-
-
 if __name__ == '__main__':
-	if '-debug' in sys.argv:
-		debug()
 
 	if len(sys.argv) < 2:
 		print('Use this program as follows: python main.py PATH_TO_FILE [-saveOnly]')
@@ -337,8 +334,7 @@ if __name__ == '__main__':
 		# User only wants to save the stats, not show any graphs and shit
 		new_mbl = read_library_xml(file_path)
 
-		if '-debug' not in sys.argv:
-			save_library(new_mbl)
+		save_library(new_mbl)
 
 		today = datetime.date.today()
 

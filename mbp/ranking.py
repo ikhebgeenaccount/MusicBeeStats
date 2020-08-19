@@ -1,17 +1,29 @@
+from warnings import warn
+
 FORMAT = '{:>3} {:28.28}'
 FORMAT_DIFF = '{:>3}{:>5} {:28.28}'
 
-# TODO: titles for columns
-# TODO: diff for place in ranking
 # TODO: diff for values like play count
 
 
 class Ranking:
 	"""
+	A Ranking can display the data from a TagTracker in a ranked fashion.
+	Other TagTrackers can be added to display multiple columns of data.
 
+	Columns can be named with ColumnTitles.
+
+	Change in the ranking order can be displayed using a different Ranking for diff_ranking.
 	"""
 
 	def __init__(self, tagtracker, data_format, diff_ranking=None, reverse=True, col_titles=None):
+		"""
+		:param tagtracker: The TagTracker from which this Ranking displays the data
+		:param data_format: Format string for the data column
+		:param diff_ranking: The Ranking this will be compared with and the difference displayed, if ommited the difference column is not displayed
+		:param reverse: Determines the order of sorting, default is from higher to lower
+		:param col_titles: Accepts an list with two ColumnTitles, first member for the identifier (tag), second for the data (tag_data) in the passed TagTracker
+		"""
 		self.tagtracker = tagtracker
 		self.data_format = data_format
 		self.col_titles = col_titles
@@ -25,11 +37,7 @@ class Ranking:
 		self.extra_cols = []
 
 	def get_ranking(self, key):
-		try:
-			return self.sorted_keys.index(key)
-		except ValueError:
-			print('ve')
-			return len(self.sorted_keys)
+		return self.sorted_keys.index(key)
 
 	def add_tagtracker(self, tagtracker, data_format, col_title=None):
 		self.extra_tagtrackers.append(tagtracker)
@@ -39,9 +47,13 @@ class Ranking:
 	def get_string(self, count=10):
 		"""
 		:param count: the amount of lines to print of the ranking (e.g. count=10 prints the top 10)
-		:return: string with top 10, with all data from extra tagtrackers and column titles
+		:return: string with top count, with all data from extra tagtrackers and column titles
 		"""
-		# Print the top <count>
+		if count > len(self.sorted_keys):
+			# warn('Count is higher than number of entries, printing all.')
+			count = len(self.sorted_keys)
+
+		# First line should be generated with column titles if we have those
 		if self.col_titles:
 			# First two columns
 			if self.diff_ranking:
@@ -57,6 +69,7 @@ class Ranking:
 		else:
 			res = ''
 
+		# Append the top <count>
 		for i in range(0, count):
 			# Get this entries key
 			curr_entry = self.sorted_keys[i]
@@ -67,6 +80,7 @@ class Ranking:
 				# Add formatted data from the extra tagtrackers for curr_entry
 				extra_str += self.extra_data_formats[j].format(self.extra_tagtrackers[j].data[curr_entry])
 
+			# Generate entry and append extra_str
 			if self.diff_ranking:
 				try:
 					diff_value = self.diff_ranking.get_ranking(curr_entry) - self.sorted_keys.index(curr_entry)
@@ -78,7 +92,7 @@ class Ranking:
 						diff_string = '(0)'
 					res += FORMAT_DIFF.format(str(i + 1) + '.', diff_string, curr_entry) + self.data_format.format(self.tagtracker.data[curr_entry]) + extra_str + '\n'
 				except ValueError:
-					res += FORMAT_DIFF.format(str(i + 1) + '.', '(+' + self.diff_ranking.get_ranking(curr_entry), curr_entry) + ')' + self.data_format.format(self.tagtracker.data[curr_entry]) + extra_str + '\n'
+					res += FORMAT_DIFF.format(str(i + 1) + '.', '(+' + str(len(self.sorted_keys) - i) + ')', curr_entry) + self.data_format.format(self.tagtracker.data[curr_entry]) + extra_str + '\n'
 			else:
 				res += FORMAT.format(str(i + 1) + '.', curr_entry) + self.data_format.format(self.tagtracker.data[curr_entry]) + extra_str + '\n'
 

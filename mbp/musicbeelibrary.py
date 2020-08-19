@@ -71,7 +71,8 @@ class MBLibrary:
 		tracks_new = {}
 		# Add all self tracks to dict
 		for t in self.tracks:
-			tracks_new[encode_track(t)] = Track(**t.data)
+			if t.get('play_count') > 0:
+				tracks_new[encode_track(t)] = Track(**t.data)
 
 		# Loop over other's tracks and subtract them with a None check before
 		for t in other.tracks:

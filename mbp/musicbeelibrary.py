@@ -14,7 +14,7 @@ class MBLibrary:
 			self.tagtrackers = tagtrackers
 
 		# If tracks are passed, throw them through tagtrackers and return
-		if tracks:
+		if type(tracks) is list:
 			self.tracks = tracks
 
 			if self.tagtrackers:
@@ -68,6 +68,9 @@ class MBLibrary:
 	# Assumptions: locations of music files are equal between libraries
 	# If not the case, change Track.encode_track
 	def __sub__(self, other):
+		# TODO: rewrite with track == track (equality operator for Track) instead of encode_track
+		# how to efficiently equate tracks to eachother?
+		# first sort then search? delete found tracks?
 		tracks_new = {}
 		# Add all self tracks to dict
 		for t in self.tracks:

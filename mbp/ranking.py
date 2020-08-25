@@ -19,7 +19,7 @@ class Ranking:
 	def __init__(self, tagtracker, data_format, diff_ranking=None, reverse=True, col_titles=None):
 		"""
 		:param tagtracker: The TagTracker from which this Ranking displays the data
-		:param data_format: Format string for the data column
+		:param data_format: Format string for the data column, can also be an array of formats that will be applied in order. Value is applied to the first entry, then the resulting string to the second entry, etc.
 		:param diff_ranking: The Ranking this will be compared with and the difference displayed, if ommited the difference column is not displayed
 		:param reverse: Determines the order of sorting, default is from higher to lower
 		:param col_titles: Accepts an list with two ColumnTitles, first member for the identifier (tag), second for the data (tag_data) in the passed TagTracker
@@ -59,7 +59,7 @@ class Ranking:
 			if self.diff_ranking:
 				res = FORMAT_DIFF.format('', '', self.col_titles[0].get_title()) + self.col_titles[1].get_title()
 			else:
-				res = FORMAT.format('', self.col_titles[0]) + self.data_format.format(self.col_titles[1])
+				res = FORMAT.format('', self.col_titles[0].get_title()) + self.col_titles[1].get_title()
 
 			# Check for extra column titles
 			for i in range(0, len(self.extra_cols)):
@@ -78,18 +78,24 @@ class Ranking:
 			extra_str = ''
 			for j in range(0, len(self.extra_tagtrackers)):
 				# Add formatted data from the extra tagtrackers for curr_entry
-				extra_str += self.extra_data_formats[j].format(self.extra_tagtrackers[j].data[curr_entry])
+				if type(self.extra_data_formats[j]) is list:
+					f_s = ''
+					for k in range(0, len(self.extra_data_formats[j])):
+						if k == 0:
+							f_s = self.extra_data_formats[j][k].format(self.extra_tagtrackers[j].data[curr_entry])
+						else:
+							f_s = self.extra_data_formats[j][k].format(f_s)
+
+					extra_str += f_s
+				else:
+					extra_str += self.extra_data_formats[j].format(self.extra_tagtrackers[j].data[curr_entry])
 
 			# Generate entry and append extra_str
 			if self.diff_ranking:
 				try:
 					diff_value = self.diff_ranking.get_ranking(curr_entry) - self.sorted_keys.index(curr_entry)
-					if diff_value > 0:
-						diff_string = '(+' + str(diff_value) + ')'
-					elif diff_value < 0:
-						diff_string = '(' + str(diff_value) + ')'
-					else:
-						diff_string = '(0)'
+
+					diff_string = '({:+d})'.format(diff_value)
 					res += FORMAT_DIFF.format(str(i + 1) + '.', diff_string, curr_entry) + self.data_format.format(self.tagtracker.data[curr_entry]) + extra_str + '\n'
 				except ValueError:
 					res += FORMAT_DIFF.format(str(i + 1) + '.', '(+' + str(len(self.sorted_keys) - i) + ')', curr_entry) + self.data_format.format(self.tagtracker.data[curr_entry]) + extra_str + '\n'

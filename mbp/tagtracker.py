@@ -89,3 +89,47 @@ class TagTracker:
 						self.data[value] = value
 					else:
 						self.data[value] = 1
+
+	# TODO: add arithmetic functions
+
+	def __sub__(self, other):
+		new_data = {}
+
+		# Subtract related entries
+		for i in self.data:
+			new_data[i] = self.data[i] - other.data[i] if i in other.data else self.data[i]
+
+		# Add -count for every entry not in self.data
+		for i in other.data:
+			if i not in self.data:
+				new_data[i] = -1 * other.data[i]
+
+		ret_tt = TagTracker(self.tag, self.tag_data, self.unique, self.case_sensitive)
+		ret_tt.data = new_data
+		return ret_tt
+
+	def __rsub__(self, other):
+		return self.return_self()
+
+	def __add__(self, other):
+		pass
+
+	def __radd__(self, other):
+		return self.return_self()
+
+	def __div__(self, other):
+		pass
+
+	def __rdiv__(self, other):
+		return self.return_self()
+
+	def __mul__(self, other):
+		pass
+
+	def __rmul__(self, other):
+		return self.return_self()
+
+	def return_self(self):
+		r = TagTracker(self.tag, self.tag_data, self.unique, self.case_sensitive)
+		r.data = self.data
+		return r

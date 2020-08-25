@@ -6,7 +6,10 @@ TAG_NAMES = ['track_id', 'name', 'artist', 'album', 'genre', 'year', 'size', 'to
 
 
 def encode_track(track):
-	return track.get('location')
+	return (track.get('name') if track.get('name') else '') \
+		+ (track.get('artist') if track.get('artist') else '') \
+		+ (track.get('album') if track.get('album') else '') \
+		# + (str(track.get('size')) if track.get('size') else '')
 
 
 class Track:
@@ -43,25 +46,25 @@ class Track:
 			return self.data[identifier_string]
 		return None
 
-	# Comparison functions
-	def __eq__(self, other):
-		return self.get('track_id') == other.get('track_id')
-
-	# Comparison of play counts
-	def __ne__(self, other):
-		return self.data['play_count'] != other.data['play_count']
-
-	def __lt__(self, other):
-		return self.data['play_count'] < other.data['play_count']
-
-	def __le__(self, other):
-		return self.data['play_count'] <= other.data['play_count']
-
-	def __gt__(self, other):
-		return self.data['play_count'] > other.data['play_count']
-
-	def __ge__(self, other):
-		return self.data['play_count'] >= other.data['play_count']
+	# # Comparison functions
+	# def __eq__(self, other):
+	# 	return self.get('track_id') == other.get('track_id')
+	#
+	# # Comparison of play counts
+	# def __ne__(self, other):
+	# 	return self.data['play_count'] != other.data['play_count']
+	#
+	# def __lt__(self, other):
+	# 	return self.data['play_count'] < other.data['play_count']
+	#
+	# def __le__(self, other):
+	# 	return self.data['play_count'] <= other.data['play_count']
+	#
+	# def __gt__(self, other):
+	# 	return self.data['play_count'] > other.data['play_count']
+	#
+	# def __ge__(self, other):
+	# 	return self.data['play_count'] >= other.data['play_count']
 
 	# to String
 	def __str__(self):
@@ -84,3 +87,16 @@ class Track:
 		if other == 0:
 			return Track(play_count=self.data['play_count'], size=self.data['size'], total_time=self.data['total_time'])
 		return self.__add__(other)
+
+	# Equality operator
+	def __eq__(self, other):
+		threshold = 0.8
+		if isinstance(other, Track):
+			checks = []
+			for t in TAG_NAMES:
+				if self.get(t) and other.get(t) and t not in ['play_count', 'play_date']:
+					checks.append(self.get(t) == other.get(t))
+
+			return sum(checks) / len(checks) >= threshold
+		else:
+			return False

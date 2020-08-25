@@ -247,16 +247,19 @@ def show_stats_over_time(date=datetime.date.today(), month_diff=1):
 
 	# Create Artist ranking
 	artist_ranking = Ranking(new_tracker_artist_play_coount, '{:>5}', diff_ranking=Ranking(old_tracker_artist_play_coount, '{:>5}'), col_titles=[ColumnTitle('Artist'), ColumnTitle('Plays', '{:>5}')])
-	artist_ranking.add_tagtracker(new_tracker_artist_play_time, '{:>8.1f}h', col_title=ColumnTitle('Time', '{:>9}'))
-	artist_ranking.add_tagtracker(new_tracker_artist_song_count, '{:>6}', col_title=ColumnTitle('Songs', '{:>6}'))
+	artist_ranking.add_tagtracker(new_tracker_artist_play_coount - old_tracker_artist_play_coount, ['({:+d})', '{:>7}'], col_title=ColumnTitle('', '{:6}'))
+	artist_ranking.add_tagtracker(new_tracker_artist_play_time, '{:>8.1f}h', col_title=ColumnTitle('Time', '{:>10}'))
+	artist_ranking.add_tagtracker(new_tracker_artist_song_count, '{:>7}', col_title=ColumnTitle('Songs', '{:>7}'))
 
 	# Create Album ranking
 	album_ranking = Ranking(new_tracker_album_play_count, '{:>5}', diff_ranking=Ranking(old_tracker_album_play_count, '{:>5}'), col_titles=[ColumnTitle('Album'), ColumnTitle('Plays')])
-	album_ranking.add_tagtracker(new_tracker_album_play_time, '{:>8.1f}h', col_title=ColumnTitle('Time', '{:>9}'))
+	album_ranking.add_tagtracker(new_tracker_album_play_count - old_tracker_album_play_count, ['({:+d})', '{:>7}'], col_title=ColumnTitle('', '{:6}'))
+	album_ranking.add_tagtracker(new_tracker_album_play_time, '{:>8.1f}h', col_title=ColumnTitle('Time', '{:>10}'))
 
 	# Create Song ranking
 	song_ranking = Ranking(new_tracker_song_play_count, '{:>5}', diff_ranking=Ranking(old_tracker_song_play_count, '{:>5}'), col_titles=[ColumnTitle('Song'), ColumnTitle('Plays')])
-	song_ranking.add_tagtracker(new_tracker_song_play_time, '{:>8.1f}h', col_title=ColumnTitle('Time', '{:>9}'))
+	song_ranking.add_tagtracker(new_tracker_song_play_count - old_tracker_song_play_count, ['({:+d})', '{:>7}'], col_title=ColumnTitle('', '{:6}'))
+	song_ranking.add_tagtracker(new_tracker_song_play_time, '{:>8.1f}h', col_title=ColumnTitle('Time', '{:>10}'))
 
 	# Print all the stuff
 	print('Over the last {} days you have added {} new songs and you listened to:'.format((new_mbl_date - old_mbl_date).days, len(new_mbl.tracks) - len(old_mbl.tracks)))
@@ -298,11 +301,11 @@ def find_closest_mbl(date):
 		# If we find a date that has an mbl file we return the MBLibrary and the date of that MBLibrary
 
 		# Backward slash because glob returns the path with \\ not with /
-		target_date = datetime.date(date.year, date.month, date.day) - datetime.timedelta(days=diff)
-		target_file = 'mbls\\{:0>4}{:0>2}{:0>2}.mbl'.format(target_date.year, target_date.month, target_date.day)
-
-		if target_file in files:
-			return read_mbl(target_file), target_date
+		# target_date = datetime.date(date.year, date.month, date.day) - datetime.timedelta(days=diff)
+		# target_file = 'mbls\\{:0>4}{:0>2}{:0>2}.mbl'.format(target_date.year, target_date.month, target_date.day)
+		#
+		# if target_file in files:
+		# 	return read_mbl(target_file), target_date
 
 		target_date = datetime.date(date.year, date.month, date.day) + datetime.timedelta(days=diff)
 		target_file = 'mbls\\{:0>4}{:0>2}{:0>2}.mbl'.format(target_date.year, target_date.month, target_date.day)

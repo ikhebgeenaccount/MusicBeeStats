@@ -276,6 +276,14 @@ def show_stats_over_time(date=datetime.date.today(), month_diff=1):
 	print('{} songs:'.format(sum([1 for t in new_tag_mbl.tracks if t.get('play_count') > 0])))
 	print(song_ranking.get_string())
 
+	# Print top 10 risers
+	print('Biggest increases:')
+	print(Ranking(new_tracker_song_play_count - old_tracker_song_play_count, '{:+5d}', col_titles=[ColumnTitle('Song'), ColumnTitle('Increase')]).get_string())
+
+	# Print top 10 fallers
+	print('Biggest decreases:')
+	print(Ranking(new_tracker_song_play_count - old_tracker_song_play_count, '{:+5d}', col_titles=[ColumnTitle('Song'), ColumnTitle('Decrease')], reverse=False).get_string())
+
 	# Print total stats
 	print('All combined this makes for:\n'
 		  ' {} total play count\n'

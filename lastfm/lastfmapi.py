@@ -69,7 +69,7 @@ class LastFMAPI:
 		try:
 			return [Track(artist=t['artist']['name'], name=t['name']) for t in self.get_similar_tracks(artist, track)['similartracks']['track']]
 		except KeyError:
-			print(artist, track)
-			print(self.get_similar_tracks(artist, track))
+			# print(artist, track)
+			# print(self.get_similar_tracks(artist, track))
 			return []
 

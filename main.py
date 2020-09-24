@@ -269,7 +269,7 @@ def show_stats_over_time(date=datetime.date.today(), month_diff=1):
 	api_settings = Config('lastfmapi.mbc')
 	api = LastFMAPI(key=api_settings.get_setting('api_key')[0])
 	ranking_t = Ranking(new_tracker_song_play_count_track, '{:>5}')
-	recommender = Recommender(ranking_t, api, based_on=15, amount=10)
+	recommender = Recommender(ranking_t, api, based_on=200, amount=10)
 
 	# Print all the stuff
 	print('Over the last {} days you have added {} new songs and you listened to:'.format((new_mbl_date - old_mbl_date).days, len(new_mbl.tracks) - len(old_mbl.tracks)))
@@ -298,7 +298,7 @@ def show_stats_over_time(date=datetime.date.today(), month_diff=1):
 	# Print recommendations
 	print('Based on the songs you have listened to most this month, you might also like:')
 	format_string = '{:<16.16} {:<24.24} {:<4}'
-	print(format_string.format('Artist', 'Song', 'Match'))
+	print(format_string.format('Artist', 'Song', 'Match', ''))
 	for r in recommender.get_recommendations():
 		print(format_string.format(r[0].get('artist'), r[0].get('name'), f'{r[2] * 100:.1f}%'))
 

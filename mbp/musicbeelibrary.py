@@ -64,6 +64,15 @@ class MBLibrary:
 
 				self.tracks.append(t)
 
+	def __contains__(self, item):
+		if isinstance(item, Track):
+			for t in self.tracks:
+				if t == item:
+					return True
+				elif t.get('name') == item.get('name') and t.get('artist') == item.get('artist'):
+					return True
+		return False
+
 	# Arithmetic functions only subtract and add play counts of same tracks
 	# Assumptions: locations of music files are equal between libraries
 	# If not the case, change Track.encode_track

@@ -3,4 +3,5 @@ mbls/*
 .idea
 __pycache__
 boot.bat
-debug.py
+debug.*
+lastfmapi.mbc

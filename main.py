@@ -8,10 +8,12 @@ import dateutil
 import matplotlib.pyplot as plt
 import numpy
 
+from lastfm.lastfmapi import LastFMAPI
 from mbp.config import Config
 from mbp.musicbeelibrary import MBLibrary
 from mbp.plots import barh_plot, scatter_plot
 from mbp.ranking import Ranking, ColumnTitle
+from mbp.recommender import Recommender
 from mbp.tagtracker import TagTracker
 from mbp.track import Track
 
@@ -217,7 +219,9 @@ def show_stats_over_time(date=datetime.date.today(), month_diff=1):
 	new_tracker_album_play_count = TagTracker('album', 'play_count', unique=False)
 	new_tracker_album_play_time = TagTracker('album', tag_data=lambda item: item.get('play_count') * item.get('total_time') / 3600000, unique=False)
 	new_tracker_song_play_count = TagTracker('name', 'play_count', unique=False)
+	new_tracker_song_play_count_track = TagTracker(lambda t: t, 'play_count', unique=False)
 	new_tracker_song_play_time = TagTracker('name', tag_data=lambda item: item.get('play_count') * item.get('total_time') / 3600000, unique=False)
+	new_tracker_artist_song_name = TagTracker('artist', tag_data=lambda item: None if item.get('play_count') == 0 else 1, unique=False)
 	new_tag_mbl = MBLibrary(tracks=subbed_mbl.tracks, tagtrackers=[
 		new_tracker_artist_play_coount,
 		new_tracker_artist_song_count,
@@ -225,7 +229,9 @@ def show_stats_over_time(date=datetime.date.today(), month_diff=1):
 		new_tracker_album_play_count,
 		new_tracker_album_play_time,
 		new_tracker_song_play_count,
-		new_tracker_song_play_time
+		new_tracker_song_play_count_track,
+		new_tracker_song_play_time,
+		new_tracker_artist_song_name
 	])
 
 	old_tracker_artist_play_coount = TagTracker('artist', 'play_count', unique=False)
@@ -234,15 +240,13 @@ def show_stats_over_time(date=datetime.date.today(), month_diff=1):
 	old_tracker_album_play_count = TagTracker('album', 'play_count', unique=False)
 	old_tracker_album_play_time = TagTracker('album', tag_data=lambda item: item.get('play_count') * item.get('total_time') / 3600000, unique=False)
 	old_tracker_song_play_count = TagTracker('name', 'play_count', unique=False)
-	old_tracker_song_play_time = TagTracker('name', tag_data=lambda item: item.get('play_count') * item.get('total_time') / 3600000, unique=False)
 	old_tag_mbl = MBLibrary(tracks=old_subbed_mbl.tracks, tagtrackers=[
 		old_tracker_artist_play_coount,
 		old_tracker_artist_song_count,
 		old_tracker_artist_play_time,
 		old_tracker_album_play_count,
 		old_tracker_album_play_time,
-		old_tracker_song_play_count,
-		old_tracker_song_play_time
+		old_tracker_song_play_count
 	])
 
 	# Create Artist ranking
@@ -261,20 +265,26 @@ def show_stats_over_time(date=datetime.date.today(), month_diff=1):
 	song_ranking.add_tagtracker(new_tracker_song_play_count - old_tracker_song_play_count, ['({:+d})', '{:>7}'], col_title=ColumnTitle('', '{:6}'))
 	song_ranking.add_tagtracker(new_tracker_song_play_time, '{:>8.1f}h', col_title=ColumnTitle('Time', '{:>10}'))
 
+	# Create recommendations
+	api_settings = Config('lastfmapi.mbc')
+	api = LastFMAPI(key=api_settings.get_setting('api_key')[0])
+	ranking_t = Ranking(new_tracker_song_play_count_track, '{:>5}')
+	recommender = Recommender(ranking_t, api, based_on=15, amount=10)
+
 	# Print all the stuff
 	print('Over the last {} days you have added {} new songs and you listened to:'.format((new_mbl_date - old_mbl_date).days, len(new_mbl.tracks) - len(old_mbl.tracks)))
 
 	# Print top 5 most listened to artists
 	print('{} artists:'.format(sum([1 for p_c in new_tracker_artist_play_coount.data.values() if p_c > 0])))
-	print(artist_ranking.get_string())
+	print(artist_ranking.get_string(count=10))
 
 	# Print top 5 most listened to albums
 	print('{} albums:'.format(sum([1 for p_c in new_tracker_album_play_count.data.values() if p_c > 0])))
-	print(album_ranking.get_string())
+	print(album_ranking.get_string(count=10))
 
 	# Print top 5 most listened to songs
 	print('{} songs:'.format(sum([1 for t in new_tag_mbl.tracks if t.get('play_count') > 0])))
-	print(song_ranking.get_string())
+	print(song_ranking.get_string(count=10))
 
 	# Print top 10 risers
 	print('Biggest increases:')
@@ -283,6 +293,16 @@ def show_stats_over_time(date=datetime.date.today(), month_diff=1):
 	# Print top 10 fallers
 	print('Biggest decreases:')
 	print(Ranking(new_tracker_song_play_count - old_tracker_song_play_count, '{:+5d}', col_titles=[ColumnTitle('Song'), ColumnTitle('Decrease')], reverse=False).get_string())
+
+	# TODO: populate fake tagtrackers and use ranking
+	# Print recommendations
+	print('Based on the songs you have listened to most this month, you might also like:')
+	format_string = '{:<16.16} {:<24.24} {:<4}'
+	print(format_string.format('Artist', 'Song', 'Match'))
+	for r in recommender.get_recommendations():
+		print(format_string.format(r[0].get('artist'), r[0].get('name'), f'{r[2] * 100:.1f}%'))
+
+	print()
 
 	# Print total stats
 	print('All combined this makes for:\n'

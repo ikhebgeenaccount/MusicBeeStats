@@ -1,9 +1,5 @@
-from warnings import warn
-
 FORMAT = '{:>3} {:28.28}'
 FORMAT_DIFF = '{:>3}{:>5} {:28.28}'
-
-# TODO: diff for values like play count
 
 
 class Ranking:
@@ -38,6 +34,9 @@ class Ranking:
 
 	def get_ranking(self, key):
 		return self.sorted_keys.index(key)
+
+	def get_entry(self, placement, zero_indexed=False):
+		return self.sorted_keys[placement - (0 if zero_indexed else 1)]
 
 	def add_tagtracker(self, tagtracker, data_format, col_title=None):
 		self.extra_tagtrackers.append(tagtracker)

@@ -100,3 +100,6 @@ class Track:
 			return sum(checks) / len(checks) >= threshold
 		else:
 			return False
+
+	def __hash__(self):
+		return hash((self.get('name'), self.get('artist'), self.get('album')))

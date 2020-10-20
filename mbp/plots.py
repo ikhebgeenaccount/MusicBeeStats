@@ -2,13 +2,16 @@ import numpy
 from matplotlib import pyplot as plt
 
 
-def barh_plot(d, title, x_label=None, y_label=None):
+def barh_plot(d, title, x_label=None, y_label=None, y_scale=None):
 	"""Creates a horizontal bar plot of the data in dictionary d with keys as labels and values as values."""
 	plt.rcdefaults()
 	fig, ax = plt.subplots()
 
+	x = list(d.keys())
+	y = list(d.values())
+
 	# Add data
-	ax.barh(list(d.keys()), list(d.values()))
+	ax.barh(range(len(x)), y, tick_label=x)
 
 	# Set title
 	ax.set_title(title)
@@ -18,6 +21,9 @@ def barh_plot(d, title, x_label=None, y_label=None):
 		ax.set_xlabel(x_label)
 	if y_label:
 		ax.set_ylabel(y_label)
+
+	if y_scale:
+		ax.set_xscale(y_scale)
 
 	# Set data labels
 	ax.set_yticklabels(d.keys())

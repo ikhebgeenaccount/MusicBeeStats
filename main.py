@@ -62,6 +62,8 @@ def show_stats(file_path):
 		TagTracker(tag='album', tag_data='play_count', unique=False),
 		# Sums the total time listened to per album
 		TagTracker(tag='album', tag_data=lambda t: t.get('play_count') * t.get('total_time'), unique=False),
+
+		TagTracker(tag=lambda t: int(t.get('play_count') - (t.get('play_count') % 100))),
 	])
 
 	print(('{:20}{}\n' * 4 + '{:20}{:.1f}{}\n' * 3 + '{} {}, {} times for a total of {:.1f} hours')
@@ -106,6 +108,7 @@ def show_stats(file_path):
 	sorted_album_by_play_time = {album: round(play_time / 3600000, 0) for album, play_time in
 								 sorted(mbl.tagtrackers[16].data.items(), key=lambda item: item[1], reverse=True) if
 								 play_time > 24 * 3600000}
+	sorted_tracks_by_play_count_interval = {'{} - {}'.format(base, base + 100): (mbl.tagtrackers[17].data[base] if base in mbl.tagtrackers[17].data.keys() else 0) for base in range(min(mbl.tagtrackers[17].data.keys()), max(mbl.tagtrackers[17].data.keys()) + 100, 100)}
 
 	scatter_name_time_length = []
 	for key in mbl.tagtrackers[13].data.keys():
@@ -153,6 +156,8 @@ def show_stats(file_path):
 	barh_plot(sorted_artist_song_first_letter, 'Number of songs that start with the same letter as the artist name')
 	barh_plot(sorted_album_by_play_count, 'Play count per album')
 	barh_plot(sorted_album_by_play_time, 'Play time per album', x_label='Play time (h)')
+	barh_plot(sorted_tracks_by_play_count_interval, 'Number of tracks per play count interval of 100', y_scale='log')
+	barh_plot(sorted_tracks_by_play_count_interval, 'Number of tracks per play count interval of 100')
 
 	scatter_plot(numpy.array(scatter_name_time_length)[..., 0], numpy.array(scatter_name_time_length)[..., 1],
 				 'Length of name vs length of song', x_label='Length of name', y_label='Length of song (s)')
@@ -213,7 +218,7 @@ def show_stats_over_time(date=datetime.date.today(), month_diff=1):
 	old_subbed_mbl = old_mbl - oldest_mbl
 
 	# Track stats
-	new_tracker_artist_play_coount = TagTracker('artist', 'play_count', unique=False)
+	new_tracker_artist_play_count = TagTracker('artist', 'play_count', unique=False)
 	new_tracker_artist_song_count = TagTracker('artist')
 	new_tracker_artist_play_time = TagTracker('artist', tag_data=lambda item: item.get('play_count') * item.get('total_time') / 3600000, unique=False)
 	new_tracker_album_play_count = TagTracker('album', 'play_count', unique=False)
@@ -223,7 +228,7 @@ def show_stats_over_time(date=datetime.date.today(), month_diff=1):
 	new_tracker_song_play_time = TagTracker('name', tag_data=lambda item: item.get('play_count') * item.get('total_time') / 3600000, unique=False)
 	new_tracker_artist_song_name = TagTracker('artist', tag_data=lambda item: None if item.get('play_count') == 0 else 1, unique=False)
 	new_tag_mbl = MBLibrary(tracks=subbed_mbl.tracks, tagtrackers=[
-		new_tracker_artist_play_coount,
+		new_tracker_artist_play_count,
 		new_tracker_artist_song_count,
 		new_tracker_artist_play_time,
 		new_tracker_album_play_count,
@@ -234,14 +239,14 @@ def show_stats_over_time(date=datetime.date.today(), month_diff=1):
 		new_tracker_artist_song_name
 	])
 
-	old_tracker_artist_play_coount = TagTracker('artist', 'play_count', unique=False)
+	old_tracker_artist_play_count = TagTracker('artist', 'play_count', unique=False)
 	old_tracker_artist_song_count = TagTracker('artist')
 	old_tracker_artist_play_time = TagTracker('artist', tag_data=lambda item: item.get('play_count') * item.get('total_time') / 3600000, unique=False)
 	old_tracker_album_play_count = TagTracker('album', 'play_count', unique=False)
 	old_tracker_album_play_time = TagTracker('album', tag_data=lambda item: item.get('play_count') * item.get('total_time') / 3600000, unique=False)
 	old_tracker_song_play_count = TagTracker('name', 'play_count', unique=False)
 	old_tag_mbl = MBLibrary(tracks=old_subbed_mbl.tracks, tagtrackers=[
-		old_tracker_artist_play_coount,
+		old_tracker_artist_play_count,
 		old_tracker_artist_song_count,
 		old_tracker_artist_play_time,
 		old_tracker_album_play_count,
@@ -250,8 +255,8 @@ def show_stats_over_time(date=datetime.date.today(), month_diff=1):
 	])
 
 	# Create Artist ranking
-	artist_ranking = Ranking(new_tracker_artist_play_coount, '{:>5}', diff_ranking=Ranking(old_tracker_artist_play_coount, '{:>5}'), col_titles=[ColumnTitle('Artist'), ColumnTitle('Plays', '{:>5}')])
-	artist_ranking.add_tagtracker(new_tracker_artist_play_coount - old_tracker_artist_play_coount, ['({:+d})', '{:>7}'], col_title=ColumnTitle('', '{:6}'))
+	artist_ranking = Ranking(new_tracker_artist_play_count, '{:>5}', diff_ranking=Ranking(old_tracker_artist_play_count, '{:>5}'), col_titles=[ColumnTitle('Artist'), ColumnTitle('Plays', '{:>5}')])
+	artist_ranking.add_tagtracker(new_tracker_artist_play_count - old_tracker_artist_play_count, ['({:+d})', '{:>7}'], col_title=ColumnTitle('', '{:6}'))
 	artist_ranking.add_tagtracker(new_tracker_artist_play_time, '{:>8.1f}h', col_title=ColumnTitle('Time', '{:>10}'))
 	artist_ranking.add_tagtracker(new_tracker_artist_song_count, '{:>7}', col_title=ColumnTitle('Songs', '{:>7}'))
 
@@ -275,15 +280,21 @@ def show_stats_over_time(date=datetime.date.today(), month_diff=1):
 	print('Over the last {} days you have added {} new songs and you listened to:'.format((new_mbl_date - old_mbl_date).days, len(new_mbl.tracks) - len(old_mbl.tracks)))
 
 	# Print top 5 most listened to artists
-	print('{} artists:'.format(sum([1 for p_c in new_tracker_artist_play_coount.data.values() if p_c > 0])))
+	new_artist_count = sum([1 for p_c in new_tracker_artist_play_count.data.values() if p_c > 0])
+	old_artist_count = sum([1 for p_c in old_tracker_artist_play_count.data.values() if p_c > 0])
+	print('{} ({:+d}) artists:'.format(new_artist_count, new_artist_count - old_artist_count))
 	print(artist_ranking.get_string(count=10))
 
 	# Print top 5 most listened to albums
-	print('{} albums:'.format(sum([1 for p_c in new_tracker_album_play_count.data.values() if p_c > 0])))
+	new_album_count = sum([1 for p_c in new_tracker_album_play_count.data.values() if p_c > 0])
+	old_album_count = sum([1 for p_c in old_tracker_album_play_count.data.values() if p_c > 0])
+	print('{} ({:+d}) albums:'.format(new_album_count, new_album_count - old_album_count))
 	print(album_ranking.get_string(count=10))
 
 	# Print top 5 most listened to songs
-	print('{} songs:'.format(sum([1 for t in new_tag_mbl.tracks if t.get('play_count') > 0])))
+	new_song_count = sum([1 for t in new_tag_mbl.tracks if t.get('play_count') > 0])
+	old_song_count = sum([1 for t in old_tag_mbl.tracks if t.get('play_count') > 0])
+	print('{} ({:+d}) songs:'.format(new_song_count, new_song_count - old_song_count))
 	print(song_ranking.get_string(count=10))
 
 	# Print top 10 risers

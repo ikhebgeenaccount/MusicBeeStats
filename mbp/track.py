@@ -50,21 +50,21 @@ class Track:
 	# def __eq__(self, other):
 	# 	return self.get('track_id') == other.get('track_id')
 	#
-	# # Comparison of play counts
-	# def __ne__(self, other):
-	# 	return self.data['play_count'] != other.data['play_count']
-	#
-	# def __lt__(self, other):
-	# 	return self.data['play_count'] < other.data['play_count']
-	#
-	# def __le__(self, other):
-	# 	return self.data['play_count'] <= other.data['play_count']
-	#
-	# def __gt__(self, other):
-	# 	return self.data['play_count'] > other.data['play_count']
-	#
-	# def __ge__(self, other):
-	# 	return self.data['play_count'] >= other.data['play_count']
+	# Comparison of play counts
+	def __ne__(self, other):
+		return self.data['play_count'] != other.data['play_count']
+
+	def __lt__(self, other):
+		return self.data['play_count'] < other.data['play_count']
+
+	def __le__(self, other):
+		return self.data['play_count'] <= other.data['play_count']
+
+	def __gt__(self, other):
+		return self.data['play_count'] > other.data['play_count']
+
+	def __ge__(self, other):
+		return self.data['play_count'] >= other.data['play_count']
 
 	# to String
 	def __str__(self):

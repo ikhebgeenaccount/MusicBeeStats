@@ -174,14 +174,14 @@ def read_library_xml(file_path, tagtrackers=None):
 
 
 # Reads an .mbl file
-def read_mbl(file_path):
+def read_mbl(file_path, tagtrackers=None):
 	tracks = []
 	with open(file_path, 'r', encoding='utf-8') as mbl_file:
 		for line in mbl_file:
 			track_json = json.loads(line)
 			tracks.append(Track(**track_json))
 
-	return MBLibrary(tracks=tracks)
+	return MBLibrary(tracks=tracks, tagtrackers=tagtrackers)
 
 
 # Saves the library stats to a datestamped mbl file in the mbls folder
@@ -329,7 +329,7 @@ def show_stats_over_time(date=datetime.date.today(), month_diff=1):
 # Finds the closest older .mbl file to given date
 # It keeps expanding the windows for which it will accept a date, so if there is only today's mbl file and you're
 # looking for one, in the end it'll return today's mbl file
-def find_closest_mbl(date, diff_inc=1):
+def find_closest_mbl(date, diff_inc=1, tagtrackers=None):
 	found = False
 
 	files = glob.glob('mbls/*.mbl')
@@ -350,7 +350,7 @@ def find_closest_mbl(date, diff_inc=1):
 		target_file = 'mbls\\{:0>4}{:0>2}{:0>2}.mbl'.format(target_date.year, target_date.month, target_date.day)
 
 		if target_file in files:
-			return read_mbl(target_file), target_date
+			return read_mbl(target_file, tagtrackers=tagtrackers), target_date
 
 		diff += diff_inc
 

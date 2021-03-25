@@ -329,7 +329,7 @@ def show_stats_over_time(date=datetime.date.today(), month_diff=1):
 # Finds the closest older .mbl file to given date
 # It keeps expanding the windows for which it will accept a date, so if there is only today's mbl file and you're
 # looking for one, in the end it'll return today's mbl file
-def find_closest_mbl(date):
+def find_closest_mbl(date, diff_inc=1):
 	found = False
 
 	files = glob.glob('mbls/*.mbl')
@@ -352,7 +352,10 @@ def find_closest_mbl(date):
 		if target_file in files:
 			return read_mbl(target_file), target_date
 
-		diff += 1
+		diff += diff_inc
+
+		if diff > 365:
+			raise ValueError('Cant find close mbl for date ' + date.strftime('%m/%d/%Y'))
 
 
 if __name__ == '__main__':

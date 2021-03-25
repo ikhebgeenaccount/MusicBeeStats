@@ -17,7 +17,6 @@ class Recommender:
 		if based_on:
 			self.based_on = min(based_on, len(self.ranking.sorted_keys))
 			self.max_score = sum([self.ranking.get_score(i, zero_indexed=True) for i in range(0, self.based_on)])
-			print(self.max_score)
 		if amount:
 			self.amount = amount
 

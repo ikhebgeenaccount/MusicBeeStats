@@ -12,7 +12,7 @@ class Ranking:
 	Change in the ranking order can be displayed using a different Ranking for diff_ranking.
 	"""
 
-	def __init__(self, tagtracker, data_format, diff_ranking=None, reverse=True, col_titles=None):
+	def __init__(self, tagtracker, data_format=None, diff_ranking=None, reverse=True, col_titles=None):
 		"""
 		:param tagtracker: The TagTracker from which this Ranking displays the data
 		:param data_format: Format string for the data column, can also be an array of formats that will be applied in order. Value is applied to the first entry, then the resulting string to the second entry, etc.

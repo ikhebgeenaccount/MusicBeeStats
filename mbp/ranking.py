@@ -41,6 +41,9 @@ class Ranking:
 	def get_score(self, placement, zero_indexed=False):
 		return self.tagtracker.data[self.get_entry(placement, zero_indexed)]
 
+	def get_length(self):
+		return len(self.sorted_keys)
+
 	def add_tagtracker(self, tagtracker, data_format, col_title=None):
 		self.extra_tagtrackers.append(tagtracker)
 		self.extra_data_formats.append(data_format)

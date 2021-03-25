@@ -3,7 +3,7 @@ class TagTracker:
 	Arguments:
 	tag - the tag to be tracked, can be either a str or a function which takes a Track and outputs some value
 	tag_data - the data tag to be tracked grouped under tag, can be either a str or a function which takes a Track and outputs some value
-	unique - boolean, True means each instance will be tracked separately, False means that an attempt will be made to add the data up, but this will only work for int type data
+	unique - boolean, True means each instance will be tracked separately, False means that an attempt will be made to add the data up, but this will only work for int or float type data
 	case_sensitive - boolean, whether to track differently capitalized strings together or separately
 
 	Examples:

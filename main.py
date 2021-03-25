@@ -330,6 +330,9 @@ def show_stats_over_time(date=datetime.date.today(), month_diff=1):
 # It keeps expanding the windows for which it will accept a date, so if there is only today's mbl file and you're
 # looking for one, in the end it'll return today's mbl file
 def find_closest_mbl(date, diff_inc=1, tagtrackers=None):
+	if diff_inc == 0:
+		raise ValueError("diff_inc can't be zero.")
+
 	found = False
 
 	files = glob.glob('mbls/*.mbl')

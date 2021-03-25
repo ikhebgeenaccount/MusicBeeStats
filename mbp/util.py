@@ -1,5 +1,7 @@
 import os
 
+import numpy as np
+
 
 def create_path(path):
 	"""Creates path if it does not exist yet. Returns path."""
@@ -14,3 +16,7 @@ def create_path(path):
 			if not os.path.exists(os.path.join(*dirs[0:i + 1])):
 				os.mkdir(os.path.join(*dirs[0:i + 1]))
 	return path
+
+
+def moving_average(x, w):
+    return np.convolve(x, np.ones(w), 'valid') / w

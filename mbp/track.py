@@ -6,10 +6,12 @@ TAG_NAMES = ['track_id', 'name', 'artist', 'album', 'genre', 'year', 'size', 'to
 
 
 def encode_track(track):
-	return (track.get('name') if track.get('name') else '') \
-		+ (track.get('artist') if track.get('artist') else '') \
-		+ (track.get('album') if track.get('album') else '') \
-		+ (str(track.get('size')) if track.get('size') else '')  # TODO: change comparison to not need shit like this
+	return track.get('track_id')
+	# return (track.get('name') if track.get('name') else '') \
+	# 	+ (track.get('artist') if track.get('artist') else '') \
+	# 	+ (track.get('album') if track.get('album') else '') \
+	# 	+ (track.get('date_added') if track.get('date_added') else '') \
+		# + (str(track.get('size')) if track.get('size') else '')
 
 
 class Track:

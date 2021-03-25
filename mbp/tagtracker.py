@@ -90,6 +90,14 @@ class TagTracker:
 					else:
 						self.data[value] = 1
 
+	def reset(self):
+		"""
+		Resets the TagTracker to an empty state, as if no evaluate() has been called yet. Properties are maintained.
+		:return:
+		"""
+		self.data = {}
+		self.case_map = {}
+
 	# TODO: add arithmetic functions
 
 	def __sub__(self, other):

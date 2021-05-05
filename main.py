@@ -11,6 +11,7 @@ import numpy
 from lastfm.lastfmapi import LastFMAPI
 from mbp.config import Config
 from mbp.musicbeelibrary import MBLibrary
+from mbp.periodgrapher import PeriodGrapher
 from mbp.plots import barh_plot, scatter_plot
 from mbp.ranking import Ranking, ColumnTitle
 from mbp.recommender import Recommender
@@ -321,6 +322,10 @@ def show_stats_over_time(date=datetime.date.today(), month_diff=1):
 		  ' {:.1f}h total hours listened'
 		  .format(str(sum(new_tag_mbl.tracks).get('play_count')),
 				  sum([track.get('play_count') * track.get('total_time') for track in new_tag_mbl.tracks]) / 3600000))
+
+	pg = PeriodGrapher(date, date - dateutil.relativedelta.relativedelta(months=month_diff))
+
+	pg.show_graphs_over_period(limit=0.05, window_size=7)
 
 	print('\nPress enter to close this overview')
 	input()

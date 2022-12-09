@@ -19,4 +19,4 @@ def create_path(path):
 
 
 def moving_average(x, w):
-    return np.convolve(x, np.ones(w), 'valid') / w
+	return np.convolve(x, np.ones(w), 'valid') / w

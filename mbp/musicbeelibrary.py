@@ -1,3 +1,7 @@
+import datetime
+import glob
+import json
+import os
 import xml.etree.ElementTree as ET
 from mbp import track
 from mbp.track import Track, encode_track
@@ -103,3 +107,73 @@ class MBLibrary:
 
 	def __rsub__(self, other):
 		return MBLibrary(tracks=self.tracks)
+
+
+# Reads an 'iTunes Music Library.xml' file, with optional tagtrackers
+def read_library_xml(file_path, tagtrackers=None):
+	return MBLibrary(file_path, tagtrackers=tagtrackers)
+
+
+# Reads an .mbl file
+def read_mbl(file_path, tagtrackers=None):
+	tracks = []
+	with open(file_path, 'r', encoding='utf-8') as mbl_file:
+		for line in mbl_file:
+			track_json = json.loads(line)
+			tracks.append(Track(**track_json))
+
+	return MBLibrary(tracks=tracks, tagtrackers=tagtrackers)
+
+
+# Saves the library stats to a datestamped mbl file in the mbls folder
+def save_library(mblibrary):
+	if not os.path.exists('mbls/'):
+		os.makedirs('mbls/')
+
+	dt = datetime.datetime.now()
+	today = '{:0>4}{:0>2}{:0>2}'.format(str(dt.year), str(dt.month), str(dt.day))
+	lib_name = 'mbls/{:0>4}{:0>2}{:0>2}.mbl'.format(str(dt.year), str(dt.month), str(dt.day))
+
+	# Check if today's date is in the list of files, if so don't save anything
+	for file in glob.glob('mbls/*.mbl'):
+		if today in file:
+			return
+
+	# Write the library to file
+	with open(lib_name, 'w', encoding='utf-8') as mbl_file:
+		for track in mblibrary.tracks:
+			mbl_file.write(str(track) + '\n')
+
+# Finds the closest older .mbl file to given date
+# It keeps expanding the windows for which it will accept a date, so if there is only today's mbl file and you're
+# looking for one, in the end it'll return today's mbl file
+def find_closest_mbl(date, diff_inc=1, tagtrackers=None):
+	if diff_inc == 0:
+		raise ValueError("diff_inc can't be zero.")
+
+	found = False
+
+	files = glob.glob('mbls/*.mbl')
+	diff = 0
+
+	while not found:
+		# Check the target date with + diff and - diff because either side of the date works
+		# If we find a date that has an mbl file we return the MBLibrary and the date of that MBLibrary
+
+		# Backward slash because glob returns the path with \\ not with /
+		# target_date = datetime.date(date.year, date.month, date.day) - datetime.timedelta(days=diff)
+		# target_file = 'mbls\\{:0>4}{:0>2}{:0>2}.mbl'.format(target_date.year, target_date.month, target_date.day)
+		#
+		# if target_file in files:
+		# 	return read_mbl(target_file), target_date
+
+		target_date = datetime.date(date.year, date.month, date.day) + datetime.timedelta(days=diff)
+		target_file = 'mbls\\{:0>4}{:0>2}{:0>2}.mbl'.format(target_date.year, target_date.month, target_date.day)
+
+		if target_file in files:
+			return read_mbl(target_file, tagtrackers=tagtrackers), target_date
+
+		diff += diff_inc
+
+		if diff > 365:
+			raise ValueError('Cant find close mbl for date ' + date.strftime('%m/%d/%Y'))

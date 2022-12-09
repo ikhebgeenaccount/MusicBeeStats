@@ -3,7 +3,7 @@ import datetime
 import numpy as np
 import matplotlib.pyplot as plt
 
-import main
+import mbp.musicbeelibrary
 from mbp import util
 from mbp.musicbeelibrary import MBLibrary
 from mbp.ranking import Ranking
@@ -25,7 +25,7 @@ class PeriodGrapher:
 		self.end_date = end_date
 
 		# Find first mbl
-		self.start_mbl, self.real_start_date = main.find_closest_mbl(start_date - datetime.timedelta(days=1), diff_inc=-1)
+		self.start_mbl, self.real_start_date = mbp.musicbeelibrary.find_closest_mbl(start_date - datetime.timedelta(days=1), diff_inc=-1)
 
 		# Create arrays to store mbls
 		self.total_days = (self.end_date - self.start_date).days + 1  # +1 to have an inclusive range for the end_date
@@ -36,10 +36,15 @@ class PeriodGrapher:
 		total_time = TagTracker(tag=lambda t: 'total_time', tag_data=lambda item: item.get('play_count') * item.get('total_time') / 60000, unique=False)
 
 		# Has the mbl over the complete period
-		self.period_mbl = MBLibrary(tracks=(main.find_closest_mbl(self.end_date)[0] - self.start_mbl).tracks, tagtrackers=[total_tracker_artist_play_time, total_time])
+		self.period_mbl = MBLibrary(tracks=(
+					mbp.musicbeelibrary.find_closest_mbl(self.end_date)[0] - self.start_mbl).tracks, tagtrackers=[total_tracker_artist_play_time, total_time])
 		self.total_time_value = total_time.data['total_time']
 
+		print(total_tracker_artist_play_time.data)
+
 		self.artist_ranking = Ranking(total_tracker_artist_play_time)
+
+		print(self.artist_ranking.get_string())
 
 	def show_graphs_over_period(self, limit=0.2, window_size=4, allow_negative=False):
 		"""
@@ -92,7 +97,7 @@ class PeriodGrapher:
 				continue
 
 			# Find closest mbl, add tagtrackers
-			target_date_mbl, real_target_date = main.find_closest_mbl(target_date, tagtrackers=tts)
+			target_date_mbl, real_target_date = mbp.musicbeelibrary.find_closest_mbl(target_date, tagtrackers=tts)
 
 			# Check if the dates match
 			if target_date != real_target_date:

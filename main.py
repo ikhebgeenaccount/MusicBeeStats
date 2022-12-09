@@ -1,7 +1,4 @@
 import datetime
-import glob
-import json
-import os
 import sys
 
 import dateutil
@@ -10,13 +7,12 @@ import numpy
 
 from lastfm.lastfmapi import LastFMAPI
 from mbp.config import Config
-from mbp.musicbeelibrary import MBLibrary
+from mbp.musicbeelibrary import MBLibrary, read_library_xml, save_library, find_closest_mbl
 from mbp.periodgrapher import PeriodGrapher
 from mbp.plots import barh_plot, scatter_plot
 from mbp.ranking import Ranking, ColumnTitle
 from mbp.recommender import Recommender
 from mbp.tagtracker import TagTracker
-from mbp.track import Track
 
 
 # TODO: fix MBLirary subtraction: subtracting one from itself results in ValueError (MBLibrary tracks list is empty which results in (if tracks:) being false)
@@ -169,42 +165,6 @@ def show_stats(file_path):
 	plt.show()
 
 
-# Reads an 'iTunes Music Library.xml' file, with optional tagtrackers
-def read_library_xml(file_path, tagtrackers=None):
-	return MBLibrary(file_path, tagtrackers=tagtrackers)
-
-
-# Reads an .mbl file
-def read_mbl(file_path, tagtrackers=None):
-	tracks = []
-	with open(file_path, 'r', encoding='utf-8') as mbl_file:
-		for line in mbl_file:
-			track_json = json.loads(line)
-			tracks.append(Track(**track_json))
-
-	return MBLibrary(tracks=tracks, tagtrackers=tagtrackers)
-
-
-# Saves the library stats to a datestamped mbl file in the mbls folder
-def save_library(mblibrary):
-	if not os.path.exists('mbls/'):
-		os.makedirs('mbls/')
-
-	dt = datetime.datetime.now()
-	today = '{:0>4}{:0>2}{:0>2}'.format(str(dt.year), str(dt.month), str(dt.day))
-	lib_name = 'mbls/{:0>4}{:0>2}{:0>2}.mbl'.format(str(dt.year), str(dt.month), str(dt.day))
-
-	# Check if today's date is in the list of files, if so don't save anything
-	for file in glob.glob('mbls/*.mbl'):
-		if today in file:
-			return
-
-	# Write the library to file
-	with open(lib_name, 'w', encoding='utf-8') as mbl_file:
-		for track in mblibrary.tracks:
-			mbl_file.write(str(track) + '\n')
-
-
 # Shows stats about the difference of play counts between the new library object and the old
 def show_stats_over_time(date=datetime.date.today(), month_diff=1):
 	# Find relevant MBLibraries
@@ -323,52 +283,17 @@ def show_stats_over_time(date=datetime.date.today(), month_diff=1):
 		  .format(str(sum(new_tag_mbl.tracks).get('play_count')),
 				  sum([track.get('play_count') * track.get('total_time') for track in new_tag_mbl.tracks]) / 3600000))
 
-	pg = PeriodGrapher(date, date - dateutil.relativedelta.relativedelta(months=month_diff))
-
-	pg.show_graphs_over_period(limit=0.05, window_size=7)
+	# TODO: fix this
+	# pg = PeriodGrapher(date, date - dateutil.relativedelta.relativedelta(months=month_diff))
+	#
+	# pg.show_graphs_over_period(limit=0.05, window_size=7)
 
 	print('\nPress enter to close this overview')
 	input()
 
 
-# Finds the closest older .mbl file to given date
-# It keeps expanding the windows for which it will accept a date, so if there is only today's mbl file and you're
-# looking for one, in the end it'll return today's mbl file
-def find_closest_mbl(date, diff_inc=1, tagtrackers=None):
-	if diff_inc == 0:
-		raise ValueError("diff_inc can't be zero.")
-
-	found = False
-
-	files = glob.glob('mbls/*.mbl')
-	diff = 0
-
-	while not found:
-		# Check the target date with + diff and - diff because either side of the date works
-		# If we find a date that has an mbl file we return the MBLibrary and the date of that MBLibrary
-
-		# Backward slash because glob returns the path with \\ not with /
-		# target_date = datetime.date(date.year, date.month, date.day) - datetime.timedelta(days=diff)
-		# target_file = 'mbls\\{:0>4}{:0>2}{:0>2}.mbl'.format(target_date.year, target_date.month, target_date.day)
-		#
-		# if target_file in files:
-		# 	return read_mbl(target_file), target_date
-
-		target_date = datetime.date(date.year, date.month, date.day) + datetime.timedelta(days=diff)
-		target_file = 'mbls\\{:0>4}{:0>2}{:0>2}.mbl'.format(target_date.year, target_date.month, target_date.day)
-
-		if target_file in files:
-			return read_mbl(target_file, tagtrackers=tagtrackers), target_date
-
-		diff += diff_inc
-
-		if diff > 365:
-			raise ValueError('Cant find close mbl for date ' + date.strftime('%m/%d/%Y'))
-
-
-if __name__ == '__main__':
-
-	if len(sys.argv) < 2:
+def main(args, today=datetime.date.today(), save=True):
+	if len(args) < 2:
 		print('Use this program as follows: python main.py PATH_TO_FILE [-saveOnly]')
 		sys.exit()
 
@@ -383,20 +308,24 @@ if __name__ == '__main__':
 
 	file_path = sys.argv[1]
 
-	if len(sys.argv) > 1 and '-saveOnly' in sys.argv:
+	if len(args) > 1 and '-saveOnly' in args:
 		# User only wants to save the stats, not show any graphs and shit
 		new_mbl = read_library_xml(file_path)
 
-		save_library(new_mbl)
-
-		today = datetime.date.today()
+		if save:
+			save_library(new_mbl)
 
 		# Check for first of the month or new year for stats
 		if today.day == config.get_setting('month')[0]:
-			show_stats_over_time()
+			show_stats_over_time(date=today)
 		if today.day == config.get_setting('year')[0] and today.month == config.get_setting('year')[1]:
 			# Print yearly stats
-			show_stats_over_time(month_diff=12)
+			show_stats_over_time(date=today, month_diff=12)
 	else:
 		# User wants to see some interesting stuff
 		show_stats(file_path)
+
+
+if __name__ == '__main__':
+	main(sys.argv)
+
